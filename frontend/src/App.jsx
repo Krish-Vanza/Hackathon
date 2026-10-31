@@ -14,6 +14,7 @@ import Audit from "./pages/governance/Audit.jsx";
 import Report from "./pages/governance/Report.jsx";
 import Review from "./pages/governance/Review.jsx";
 import Risk from "./pages/governance/Risk.jsx";
+import Requirements from "./pages/requirements/Requirements.jsx";
 
 const Graph = lazy(() => import("./pages/Graph.jsx"));
 
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="review" element={<Review />} />
             <Route path="audit" element={<Audit />} />
             <Route path="report" element={<Report />} />
+            <Route path="requirements" element={<Requirements />} />
             <Route path="*" element={<Navigate to="/forecast" replace />} />
           </Route>
         </Routes>

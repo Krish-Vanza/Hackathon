@@ -276,6 +276,13 @@ React in JavaScript with Vite, Tailwind, Recharts and `react-force-graph-2d`.
 | `/review` | HR Review | `reviews`, `reviews/{id}/decision` | Queue with filters, a detail view, and approve, reject or override. HR only |
 | `/audit` | Audit Log | `audit` | Events, newest first. HR only |
 | `/report` | Workforce Analytics Report | `reports/workforce`, `reports/workforce.csv`, `health` | Print to PDF, CSV download and system status |
+| `/requirements` | Requirements Tour | Most read endpoints | Steps through FR-01 to FR-10 with live checks |
+
+### Requirements Tour
+
+`src/pages/requirements/steps.js` defines one step per requirement. Each `check()` calls the real API and returns facts with a pass or fail worked out from the response, so a step shows **Check failed** if the feature stops working. Links to other pages carry `tourStep` in the router state, and `Layout` uses it to show a banner that leads back to the tour.
+
+Opening the tour has the same effect as opening the learning, mobility and career pages, so it queues pending reviews for `E-0007`.
 
 - **Report PDF:** the print styles in `src/index.css` remove the app frame and keep sections whole. Use the browser's Save as PDF option.
 - **Overrides:** the form sends only changed values, and checks that each is a number in range and that a comment is present.

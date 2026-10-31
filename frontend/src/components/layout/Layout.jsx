@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { api, ROLES } from "../../api.js";
 import { useApi } from "../../hooks/useApi.js";
 import { useRole } from "./RoleContext.jsx";
@@ -8,7 +8,13 @@ export const DEFAULT_EMPLOYEE = "E-0007";
 
 const EMPLOYEE_SECTIONS = ["profile", "learning", "mobility", "career"];
 
+const TOUR_STEPS = 10;
+
 const NAV_GROUPS = [
+  {
+    label: "Overview",
+    links: [["Requirements Tour", "requirements"]],
+  },
   {
     label: "Employee",
     links: [
@@ -42,9 +48,28 @@ function employeeFromPath(pathname) {
   return EMPLOYEE_SECTIONS.includes(section) && id ? decodeURIComponent(id) : null;
 }
 
+// Shown on pages opened from the Requirements Tour, so the presenter can step back or onward.
+function TourBanner({ step }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-teal-200 bg-teal-50 px-4 py-2 text-sm text-teal-900 print:hidden lg:px-8">
+      <span>Requirements Tour: FR-{String(step).padStart(2, "0")}</span>
+      <span className="flex gap-3 font-medium">
+        <Link to={`/requirements?step=${step}`} className="underline">
+          Back to tour
+        </Link>
+        {step < TOUR_STEPS && (
+          <Link to={`/requirements?step=${step + 1}`} className="underline">
+            Next requirement
+          </Link>
+        )}
+      </span>
+    </div>
+  );
+}
+
 export default function Layout() {
   const { role, setRole } = useRole();
-  const { pathname } = useLocation();
+  const { pathname, state } = useLocation();
   const navigate = useNavigate();
   const employees = useApi(() => api.employees());
   const employeeId = employeeFromPath(pathname) || DEFAULT_EMPLOYEE;
@@ -118,6 +143,7 @@ export default function Layout() {
             </div>
           </div>
         </header>
+        {state?.tourStep && <TourBanner step={state.tourStep} />}
         <main className="mx-auto max-w-6xl px-4 py-6 lg:px-8">
           <PageBoundary key={pathname}>
             <Outlet />

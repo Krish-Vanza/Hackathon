@@ -131,7 +131,7 @@ def get_decision(type, subject_id, key) -> dict | None
 def generate_json(prompt, schema, fallback, allowed_ids=None) -> BaseModel
 ```
 
-- Uses `google-genai` with `GEMINI_MODEL=gemini-3.8-flash`, JSON mode and a Pydantic `response_schema`.
+- Uses `google-genai` with `GEMINI_MODEL=gemini-3.1-flash-lite`, JSON mode and a Pydantic `response_schema`.
 - Validates with `schema.model_validate_json(response.text)`.
 - Caches by prompt hash in the `llm_cache` collection.
 - Rejects any response naming an ID outside `allowed_ids`.
@@ -414,7 +414,7 @@ All commands are for Windows PowerShell.
    MONGODB_URI=
    MONGODB_DB=workforce
    GEMINI_API_KEY=
-   GEMINI_MODEL=gemini-3.8-flash
+   GEMINI_MODEL=gemini-3.1-flash-lite
    LLM_MODE=mock
    ```
 4. Copy it to your own `.env`:

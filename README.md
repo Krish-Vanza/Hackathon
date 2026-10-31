@@ -53,6 +53,8 @@ npm run dev
 
 Open `http://localhost:5173`. Use **Demo role** at the top right to switch between HR and Employee.
 
+**Requirements Tour** in the sidebar walks through FR-01 to FR-10 one step at a time. Each step quotes the brief, proves the requirement with live API data, and links to the screen that delivers it.
+
 ## Data modes
 
 | Mode | How to use it | Data |
@@ -63,7 +65,7 @@ Open `http://localhost:5173`. Use **Demo role** at the top right to switch betwe
 
 `/api/health` reports the active mode in `data_source`.
 
-**Gemini is optional.** Set `GEMINI_API_KEY` and `LLM_MODE=gemini` in `backend/.env` for Gemini text. Otherwise, or if a Gemini call fails, the app uses template text.
+**Gemini is optional.** Set `GEMINI_API_KEY` and `LLM_MODE=gemini` in `backend/.env` for Gemini text, which uses `gemini-3.1-flash-lite`. Otherwise, or if a Gemini call fails, the app uses template text.
 
 **Only Harin seeds the shared database**, because `--reset` erases it, including reviews:
 

@@ -8,5 +8,5 @@ load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 MONGODB_URI = os.getenv("MONGODB_URI", "")
 MONGODB_DB = os.getenv("MONGODB_DB", "workforce")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 LLM_MODE = os.getenv("LLM_MODE", "mock")

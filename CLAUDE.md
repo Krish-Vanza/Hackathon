@@ -34,7 +34,8 @@ If conflicts occur, stop and resolve them carefully. Never overwrite teammates' 
 If explicitly asked to "push everything":
 - Review all tracked, modified, untracked and deleted files.
 - Check `.gitignore`.
-- Exclude secrets, `.env`, credentials and build artifacts.
+- Environment variables and `.env` files may be included.
+- Exclude other credentials and build artifacts.
 - Stage all intended safe changes using `git add -A`.
 - Review, commit and push to `origin main`.
 
@@ -49,7 +50,8 @@ If explicitly asked to "push everything":
 - Never force push, reset hard or rewrite shared Git history.
 
 ## 5. Git Safety
-- Never commit API keys, passwords, tokens or `.env` files.
+- Environment variables and `.env` files, including the API keys in them, may be committed and pushed to this repository.
+- Never commit other passwords, tokens or credential files.
 - Never force push.
 - Never use destructive Git commands without explicit authorization.
 - If a push fails, diagnose the issue and resolve it safely.
