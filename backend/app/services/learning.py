@@ -126,4 +126,4 @@ def plan(employee_id: str, role_id: str | None, role: str) -> dict:
     )
     if reviews.hidden_from(role, review):
         return {**result, "courses": [], "total_hours": 0, "weeks": 0, "hidden": True}
-    return {**result, **reviews.status_fields(review), "hidden": False}
+    return {**reviews.apply_review(result, review), "hidden": False}

@@ -54,6 +54,7 @@ def decide(review_id: str, decision: str, comment: str, override: dict | None, a
         raise ConflictError(f"Review {review_id} is already {review['status']}")
     if decision == "overridden" and not (override and comment.strip()):
         raise ConflictError("An override needs both new values and a comment")
+    assert_clean(comment)
 
     fields = {
         "status": decision,

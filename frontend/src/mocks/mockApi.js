@@ -384,7 +384,125 @@ function marketBrief() {
   return { brief, skills: [], explanation: explanation(brief, [["Agentic AI", "+26% over four quarters", 1]], 0.7, "Summary of stored forecasts", "template") };
 }
 
+function riskRows() {
+  return forecastGaps()
+    .map((gap, index) => {
+      const skill = skillById(gap.skill_id);
+      const shortage = round(Math.max(0, gap.future_gap / gap.forecast_demand) * 100);
+      const market_growth = Math.max(0, Math.min(100, skill.growth_pct * 2));
+      const concentration = skill.skill_id === "SK-007" ? 100 : 25;
+      const centrality = round(skill.criticality * 100);
+      const score = round(0.4 * shortage + 0.25 * concentration + 0.2 * market_growth + 0.15 * centrality);
+      return {
+        skill_id: skill.skill_id,
+        name: skill.name,
+        score,
+        level: score >= 70 ? "high" : score >= 40 ? "medium" : "low",
+        shortage,
+        concentration,
+        market_growth,
+        centrality,
+        exposed_departments: skill.skill_id === "SK-007" ? ["Data & AI"] : [],
+        explanation: explanation(
+          `${skill.name} scores ${score} out of 100.`,
+          [
+            ["Shortage", `${shortage}% of demand unmet`, 0.4],
+            ["Concentration", `${concentration}% of departments exposed`, 0.25],
+            ["Market growth", `${skill.growth_pct}% over four quarters`, 0.2],
+            ["Graph centrality", `${centrality} of 100`, 0.15],
+          ],
+          0.75 + index * 0.001,
+          "Weighted risk score",
+        ),
+      };
+    })
+    .sort((a, b) => b.score - a.score);
+}
+
+const reviewQueue = [
+  ["RV-1", "mobility", "E-0007", "R-ML", "E-0007 to ML Engineer", { role_id: "R-ML", role_title: "ML Engineer", readiness: 0.84, bridge_weeks: 7 }],
+  ["RV-2", "learning_plan", "E-0007", "R-BE", "Learning plan for E-0007", { role_id: "R-BE", course_ids: ["C-102"], weeks: 2.3 }],
+  ["RV-3", "career_plan", "E-0007", "R-AI", "E-0007 career path to AI Solutions Architect", { target_role_id: "R-AI", total_weeks: 38 }],
+  ["RV-4", "skill_claim", "E-0023", "SK-006", "Skill claim: MLOps", { skill_id: "SK-006", confidence: 0.62 }],
+].map(([review_id, type, subject_id, key, title, payload]) => ({
+  review_id,
+  type,
+  subject_id,
+  key,
+  title,
+  payload,
+  status: "pending",
+  comment: "",
+  decided_by: null,
+  decided_at: null,
+  created_at: "2026-10-31T09:00:00Z",
+  explanation: explanation(`${title}, waiting for HR.`, [["Suggested by", "workforce rules", 1]], 0.8, "Role readiness"),
+}));
+
+const auditEvents = reviewQueue.map((review) => ({
+  event: "review_submitted",
+  actor: "system",
+  entity: review.review_id,
+  detail: { type: review.type, subject_id: review.subject_id },
+  at: review.created_at,
+}));
+
+function listReviews(status, type) {
+  return reviewQueue.filter((review) => (!status || review.status === status) && (!type || review.type === type));
+}
+
+function decideReview(reviewId, body, role) {
+  if (role !== "hr") throw new MockError(403, "HR role required");
+  const review = reviewQueue.find((item) => item.review_id === reviewId);
+  if (!review) throw new MockError(404, `Review ${reviewId} not found`);
+  if (review.status !== "pending") throw new MockError(409, `Review ${reviewId} is already ${review.status}`);
+  const at = new Date().toISOString();
+  Object.assign(review, {
+    status: body.decision,
+    comment: body.comment,
+    decided_by: role,
+    decided_at: at,
+    payload: { ...review.payload, ...body.override },
+  });
+  auditEvents.unshift({ event: `review_${body.decision}`, actor: role, entity: reviewId, detail: { type: review.type, comment: body.comment }, at });
+  return review;
+}
+
+function workforceReport() {
+  const pipeline = { pending: 0, approved: 0, rejected: 0, overridden: 0 };
+  listReviews(null, "mobility").forEach((review) => (pipeline[review.status] += 1));
+  return {
+    generated_at: new Date().toISOString(),
+    data_source: "mock",
+    note: "Generated from dummy data.",
+    readiness: {
+      now: 74.2,
+      no_action: 61.3,
+      with_plans: 79.1,
+      explanation: explanation(
+        "Readiness is 74.2% now, 61.3% in four quarters with no action, and 79.1% with recommended plans.",
+        [
+          ["Attrition", "3% per quarter", 0.5, "down"],
+          ["Recommended plans", "70% assumed completion", 0.5],
+        ],
+        0.7,
+        "Demand-weighted coverage, capped per skill",
+      ),
+    },
+    top_gaps: forecastGaps().filter((gap) => gap.future_gap > 0).slice(0, 10),
+    top_risks: riskRows().slice(0, 10),
+    mobility_pipeline: pipeline,
+    accuracy: { available: true, model_mape: 6.4, naive_mape: 9.8, win_rate: 0.75, note: "Backtest on dummy data, not real workforce data." },
+  };
+}
+
+function workforceCsv() {
+  const { note, top_risks: risks } = workforceReport();
+  return [note, "Skill ID,Skill,Risk score,Risk level", ...risks.map((row) => `${row.skill_id},${row.name},${row.score},${row.level}`)].join("\n");
+}
+
 const routes = [
+  ["GET", /^\/api\/health$/, () => ({ status: "ok", database: "ok", data_source: "mock", llm_mode: "mock" })],
   ["GET", /^\/api\/me$/, (_, __, { role }) => ({ role })],
   ["GET", /^\/api\/skills$/, () => SKILLS],
   ["GET", /^\/api\/employees$/, () => EMPLOYEES.map(({ employee_id, role_id, department }) => ({ employee_id, role_id, role_title: ROLES[role_id].title, department }))],
@@ -428,6 +546,12 @@ const routes = [
   ["GET", /^\/api\/mobility\/roles\/([^/]+)\/candidates$/, ([roleId], _, { role }) => roleCandidates(roleId, role)],
   ["GET", /^\/api\/mobility\/([^/]+)$/, ([employeeId]) => mobility(employeeId)],
   ["GET", /^\/api\/career\/([^/]+)$/, ([employeeId]) => career(employeeId)],
+  ["GET", /^\/api\/risk$/, riskRows],
+  ["GET", /^\/api\/reviews$/, (_, query) => listReviews(query.get("status"), query.get("type"))],
+  ["POST", /^\/api\/reviews\/([^/]+)\/decision$/, ([reviewId], _, { body, role }) => decideReview(reviewId, body, role)],
+  ["GET", /^\/api\/audit$/, () => auditEvents],
+  ["GET", /^\/api\/reports\/workforce$/, workforceReport],
+  ["GET", /^\/api\/reports\/workforce\.csv$/, workforceCsv],
 ];
 
 export async function mockRequest(path, { method, body, role }) {

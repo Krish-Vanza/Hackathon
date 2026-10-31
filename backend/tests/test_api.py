@@ -179,6 +179,41 @@ def test_override_needs_values_and_comment_then_applies(client, hr):
     assert match["bridge_weeks"] == 2 and match["review_status"] == "overridden"
 
 
+def test_learning_override_reaches_the_employee(client, hr):
+    client.get(f"/api/learning/{STORY_EMPLOYEE}")
+    review = review_for(client, hr, "learning_plan")[0]
+    decide(client, hr, review["review_id"], "overridden", comment="Adjusted", override={"weeks": 3})
+    body = client.get(f"/api/learning/{STORY_EMPLOYEE}").json()
+    assert body["weeks"] == 3 and body["review_status"] == "overridden"
+
+
+def test_decision_comment_cannot_carry_sensitive_text(client, hr):
+    client.get(f"/api/mobility/{STORY_EMPLOYEE}")
+    target = review_for(client, hr, "mobility")[0]
+    assert decide(client, hr, target["review_id"], "approved", comment="gender: x").status_code == 422
+    assert review_for(client, hr, "mobility")[0]["status"] == "pending"
+
+
+def test_extraction_blocks_sensitive_text_before_the_llm(client):
+    response = client.post("/api/skills/extract", json={"text": "Python developer, age: 30"})
+    assert response.status_code == 422
+
+
+def test_health_reports_template_mode_without_a_gemini_key(client, monkeypatch):
+    monkeypatch.setenv("LLM_MODE", "gemini")
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    assert client.get("/api/health").json()["llm_mode"] == "mock"
+
+
+def test_forecast_factors_keep_the_stored_wording(seeded_db):
+    from app.services import forecasts
+
+    stored = seeded_db[0]["forecasts"].find_one({"skill_id": "S-028"}, {"_id": 0})
+    rows = forecasts._factors(stored)
+    assert rows[0]["value"] == stored["factors"][0]["value"]
+    assert round(sum(row["weight"] for row in rows), 2) == 1
+
+
 def test_override_cannot_add_sensitive_fields(client, hr):
     client.get(f"/api/mobility/{STORY_EMPLOYEE}")
     target = review_for(client, hr, "mobility")[0]

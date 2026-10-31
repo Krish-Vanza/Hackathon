@@ -9,3 +9,29 @@ body {
 .recharts-wrapper:focus {
   outline: none;
 }
+
+/* Print-to-PDF for /report: drop the app frame and keep sections whole. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  aside,
+  header {
+    display: none !important;
+  }
+
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  section,
+  tr {
+    break-inside: avoid;
+  }
+}

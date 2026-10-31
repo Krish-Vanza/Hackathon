@@ -2,6 +2,7 @@
 // `npm run dev:mock` serves src/mocks/mockApi.js instead of calling FastAPI.
 const USE_MOCK = import.meta.env.MODE === "mock";
 const ROLE_KEY = "demo-role";
+const UNREACHABLE = "Cannot reach the API. Is the backend running on port 8000?";
 
 export const ROLES = ["employee", "hr"];
 
@@ -36,7 +37,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request(path, { method = "GET", body } = {}) {
+async function request(path, { method = "GET", body, text = false } = {}) {
   if (USE_MOCK) {
     const { mockRequest } = await import("./mocks/mockApi.js");
     return mockRequest(path, { method, body, role: currentRole });
@@ -53,20 +54,28 @@ async function request(path, { method = "GET", body } = {}) {
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
-    throw new ApiError(0, "Cannot reach the API. Is the backend running on port 8000?");
+    throw new ApiError(0, UNREACHABLE);
   }
 
+  // The Vite proxy answers 502 when FastAPI is not running.
+  if (response.status === 502) throw new ApiError(502, UNREACHABLE);
   if (!response.ok) {
     const detail = await response.json().catch(() => null);
     const message = typeof detail?.detail === "string" ? detail.detail : `Request failed (${response.status})`;
     throw new ApiError(response.status, message);
   }
-  return response.json();
+  return text ? response.text() : response.json();
 }
 
 const id = encodeURIComponent;
 
+function queryString(params) {
+  const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value)).toString();
+  return query ? `?${query}` : "";
+}
+
 export const api = {
+  health: () => request("/api/health"),
   me: () => request("/api/me"),
   skills: () => request("/api/skills"),
   employees: () => request("/api/employees"),
@@ -75,7 +84,7 @@ export const api = {
     request(`/api/employees/${id(employeeId)}/gaps${roleId ? `?role_id=${id(roleId)}` : ""}`),
   orgGaps: () => request("/api/gaps/org"),
   graph: (focus) => request(`/api/graph${focus ? `?focus=${id(focus)}` : ""}`),
-  extractSkills: (text) => request("/api/skills/extract", { method: "POST", body: { text } }),
+  extractSkills: (text, employeeId) => request("/api/skills/extract", { method: "POST", body: { text, employee_id: employeeId } }),
   marketTrends: () => request("/api/market/trends"),
   marketBrief: () => request("/api/market/brief"),
   risingSkills: (top = 10) => request(`/api/forecast/skills?top=${top}`),
@@ -89,4 +98,10 @@ export const api = {
   mobility: (employeeId) => request(`/api/mobility/${id(employeeId)}`),
   roleCandidates: (roleId) => request(`/api/mobility/roles/${id(roleId)}/candidates`),
   career: (employeeId) => request(`/api/career/${id(employeeId)}`),
+  risk: () => request("/api/risk"),
+  reviews: (status, type) => request(`/api/reviews${queryString({ status, type })}`),
+  decideReview: (reviewId, decision) => request(`/api/reviews/${id(reviewId)}/decision`, { method: "POST", body: decision }),
+  audit: () => request("/api/audit"),
+  report: () => request("/api/reports/workforce"),
+  reportCsv: () => request("/api/reports/workforce.csv", { text: true }),
 };

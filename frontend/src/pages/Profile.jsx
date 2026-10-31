@@ -4,6 +4,7 @@ import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, Responsi
 import { api } from "../api.js";
 import { Async, Card, ErrorNotice, PageHeader, pct } from "../components/layout/ui.jsx";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
+import StatusBadge from "../components/shared/StatusBadge.jsx";
 import { useApi } from "../hooks/useApi.js";
 
 function SkillRadar({ skills }) {
@@ -68,7 +69,23 @@ function GapList({ employeeId }) {
   );
 }
 
-function SkillExtractor() {
+function SkillClaims({ claims }) {
+  return (
+    <div className="mt-4 border-t border-slate-100 pt-3">
+      <p className="text-xs font-medium text-slate-500">Skill claims sent to HR</p>
+      <ul className="mt-1 space-y-1 text-sm">
+        {claims.map((claim) => (
+          <li key={claim.skill_id} className="flex items-center justify-between gap-3">
+            <span>{claim.name}</span>
+            <StatusBadge status={claim.review_status} ai={false} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function SkillExtractor({ employeeId, claims = [], onExtracted }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
@@ -79,7 +96,8 @@ function SkillExtractor() {
     setBusy(true);
     setError(null);
     try {
-      setResult(await api.extractSkills(text));
+      setResult(await api.extractSkills(text, employeeId));
+      onExtracted();
     } catch (failure) {
       setResult(null);
       setError(failure);
@@ -122,12 +140,13 @@ function SkillExtractor() {
               <span>{match.name}</span>
               <span className="text-slate-600">
                 {pct(match.confidence)}
-                {match.needs_review && " · sent to HR"}
+                {match.review_status && " · sent to HR"}
               </span>
             </li>
           ))}
         </ul>
       )}
+      {claims.length > 0 && <SkillClaims claims={claims} />}
     </Card>
   );
 }
@@ -160,7 +179,7 @@ export default function Profile() {
       </Async>
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <GapList employeeId={id} />
-        <SkillExtractor />
+        <SkillExtractor key={id} employeeId={id} claims={profile.data?.claims} onExtracted={profile.reload} />
       </div>
     </>
   );

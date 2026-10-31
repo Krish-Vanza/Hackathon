@@ -106,6 +106,7 @@ def _fallback_graph(skills: list[dict], roles: list[dict], focus: str | None) ->
 
 
 def extract_skills(text: str, skills: list[dict]) -> tuple[list[dict], str]:
+    assert_clean(text)
     result = _data_call("extraction", "extract_skills", text)
     if result is not None:
         rows = _read(result, "skills", "matches") if not isinstance(result, list) else result

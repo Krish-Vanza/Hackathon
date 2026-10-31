@@ -54,13 +54,14 @@ def _factors(forecast: dict) -> list[dict]:
     """Turn stored coefficient contributions into Factor rows with weights that sum to 1."""
     rows = []
     for factor in forecast.get("factors") or []:
-        contribution = factor.get("contribution", factor.get("weight", 0.0))
-        rows.append((factor.get("name", "Feature"), float(contribution)))
-    total = sum(abs(value) for _, value in rows) or 1.0
+        contribution = float(factor.get("contribution", factor.get("weight", 0.0)))
+        text = factor.get("value") or f"{contribution:+.3f}"
+        rows.append((factor.get("name", "Feature"), text, contribution))
+    total = sum(abs(value) for _, _, value in rows) or 1.0
     return [
-        {"name": name, "value": f"{value:+.3f}", "weight": round(abs(value) / total, 3),
+        {"name": name, "value": text, "weight": round(abs(value) / total, 3),
          "direction": "up" if value >= 0 else "down"}
-        for name, value in rows
+        for name, text, value in rows
     ]
 
 

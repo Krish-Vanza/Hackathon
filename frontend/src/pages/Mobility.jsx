@@ -145,7 +145,7 @@ export default function Mobility() {
               ))}
             </div>
           ) : (
-            <Candidates roles={data.matches} />
+            <Candidates key={data.employee_id} roles={data.matches} />
           )
         }
       </Async>
