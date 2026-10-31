@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architecture Diagram</title>
+<style>
+  :root {
+    --bg: #f6f7f8; --ink: #1d2127; --muted: #59626e; --rule: #d5d9df;
+    --panel: #ffffff; --lane: #eef0f3; --arrow: #4a5360;
+    --accent: #c62f3b; --accent-tint: #fbe9ea;
+    --harin: #23765a; --harin-tint: #e4f3ec;
+    --harshit: #2a66ad; --harshit-tint: #e6effa;
+    --bhuvi: #7346b0; --bhuvi-tint: #f0e9fa;
+    --krish: #a86100; --krish-tint: #fbefdc;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    --mono: ui-monospace, Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171b; --ink: #e9ebee; --muted: #a6aeb9; --rule: #343a43;
+      --panel: #1c2026; --lane: #23282f; --arrow: #aeb6c1;
+      --accent: #ff7d85; --accent-tint: #3b1f23;
+      --harin: #63cfa5; --harin-tint: #1b3229;
+      --harshit: #7ab3f0; --harshit-tint: #1b2c40;
+      --bhuvi: #bd9df0; --bhuvi-tint: #2b2342;
+      --krish: #eeb05a; --krish-tint: #372b19;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.5; }
+  main { max-width: 1320px; margin: 0 auto; padding: 32px 16px 48px; }
+  h1 { margin: 0; font-size: 28px; line-height: 1.2; }
+  .lede { margin: 6px 0 20px; color: var(--muted); }
+  figure { margin: 0; }
+  .scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 12px; }
+  svg { display: block; width: 100%; min-width: 960px; height: auto; font-family: var(--sans); }
+  figcaption { margin-top: 12px; color: var(--muted); }
+  h2 { margin: 28px 0 10px; font-size: 18px; }
+  .paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .paths li { background: var(--panel); border: 1px solid var(--rule); border-radius: 10px; padding: 14px 16px; }
+  .paths strong { display: block; margin-bottom: 4px; }
+
+  .lane { fill: var(--bg); stroke: var(--rule); }
+  .head { fill: var(--lane); stroke: var(--rule); }
+  .chip { fill: var(--panel); stroke: var(--rule); }
+  .neutral { fill: var(--panel); stroke: var(--arrow); stroke-width: 1.2; }
+  .harin { fill: var(--harin-tint); stroke: var(--harin); stroke-width: 1.4; }
+  .harshit { fill: var(--harshit-tint); stroke: var(--harshit); stroke-width: 1.4; }
+  .bhuvi { fill: var(--bhuvi-tint); stroke: var(--bhuvi); stroke-width: 1.4; }
+  .krish { fill: var(--krish-tint); stroke: var(--krish); stroke-width: 1.4; }
+  .offline { stroke-dasharray: 6 4; }
+  .human { fill: var(--accent-tint); stroke: var(--accent); stroke-width: 1.6; }
+
+  text { fill: var(--ink); font-size: 12px; }
+  .title { font-size: 14px; font-weight: 700; }
+  .name { font-size: 13px; font-weight: 700; }
+  .sub { fill: var(--muted); font-size: 12px; }
+  .tech { fill: var(--muted); font-size: 11.5px; }
+  .mono { font-family: var(--mono); font-size: 11px; }
+  .label { fill: var(--muted); font-size: 11px; }
+  .label-mono { fill: var(--muted); font-family: var(--mono); font-size: 11px; }
+  .label-human { fill: var(--accent); font-size: 11px; font-weight: 700; }
+  .mid { text-anchor: middle; }
+  .t-harin { fill: var(--harin); font-weight: 700; }
+  .t-harshit { fill: var(--harshit); font-weight: 700; }
+  .t-bhuvi { fill: var(--bhuvi); font-weight: 700; }
+  .t-krish { fill: var(--krish); font-weight: 700; }
+
+  .flow { fill: none; stroke: var(--arrow); stroke-width: 1.6; }
+  .flow-offline { stroke-dasharray: 6 4; }
+  .flow-human { fill: none; stroke: var(--accent); stroke-width: 2; }
+  .tip { fill: var(--arrow); }
+  .tip-human { fill: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>System Architecture</h1>
+  <p class="lede">Skill Gap and Workforce Evolution Predictor, HCLTech hackathon Project 4</p>
+
+  <figure>
+    <div class="scroll">
+      <svg viewBox="0 0 1280 950" role="img" aria-label="Layered architecture. Employees and HR use a React JavaScript frontend built by Bhuvi and Krish. It calls a FastAPI REST API and services built by Harshit. Those use the data, model and AI layer built by Harin, which connects to MongoDB Atlas and the Gemini API. Offline jobs load dummy data and store forecasts in MongoDB before the app runs.">
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="tip" d="M0 0 L10 5 L0 10 z"/>
+          </marker>
+          <marker id="arrow-human" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path class="tip-human" d="M0 0 L10 5 L0 10 z"/>
+          </marker>
+        </defs>
+
+        <!-- Lanes -->
+        <rect class="lane" x="20" y="16" width="1240" height="62" rx="10"/>
+        <rect class="head" x="20" y="16" width="190" height="62" rx="10"/>
+        <rect class="lane" x="20" y="116" width="1240" height="196" rx="10"/>
+        <rect class="head" x="20" y="116" width="190" height="196" rx="10"/>
+        <rect class="lane" x="20" y="350" width="1240" height="92" rx="10"/>
+        <rect class="head" x="20" y="350" width="190" height="92" rx="10"/>
+        <rect class="lane" x="20" y="480" width="1240" height="128" rx="10"/>
+        <rect class="head" x="20" y="480" width="190" height="128" rx="10"/>
+        <rect class="lane" x="20" y="646" width="1240" height="108" rx="10"/>
+        <rect class="head" x="20" y="646" width="190" height="108" rx="10"/>
+        <rect class="lane" x="20" y="792" width="1240" height="108" rx="10"/>
+        <rect class="head" x="20" y="792" width="190" height="108" rx="10"/>
+
+        <!-- Lane headings and tech stack -->
+        <text class="title" x="34" y="42">USERS</text>
+        <text class="tech" x="34" y="60">Browser, demo role switcher</text>
+
+        <text class="title" x="34" y="142">FRONTEND</text>
+        <text x="34" y="160"><tspan class="t-bhuvi">M3 Bhuvi</tspan><tspan class="sub"> · </tspan><tspan class="t-krish">M4 Krish</tspan></text>
+        <text class="tech" x="34" y="182">React + JavaScript</text>
+        <text class="tech" x="34" y="199">Vite</text>
+        <text class="tech" x="34" y="216">React Router</text>
+        <text class="tech" x="34" y="233">Tailwind CSS</text>
+        <text class="tech" x="34" y="250">Recharts</text>
+        <text class="tech" x="34" y="267">react-force-graph-2d</text>
+        <text class="tech" x="34" y="284">Port 5173</text>
+
+        <text class="title" x="34" y="374">REST API</text>
+        <text class="t-harshit" x="34" y="392">M2 Harshit</text>
+        <text class="tech" x="34" y="410">HTTP + JSON, 28 endpoints</text>
+        <text class="tech" x="34" y="427">X-Demo-Role header</text>
+
+        <text class="title" x="34" y="504">BACKEND</text>
+        <text class="t-harshit" x="34" y="522">M2 Harshit</text>
+        <text class="tech" x="34" y="544">Python, FastAPI</text>
+        <text class="tech" x="34" y="561">Uvicorn, Pydantic</text>
+        <text class="tech" x="34" y="578">Port 8000</text>
+
+        <text class="title" x="34" y="670">DATA, MODELS, AI</text>
+        <text class="t-harin" x="34" y="688">M1 Harin</text>
+        <text class="tech" x="34" y="708">scikit-learn, NumPy, joblib</text>
+        <text class="tech" x="34" y="725">NetworkX, pymongo</text>
+        <text class="tech" x="34" y="742">google-genai</text>
+
+        <text class="title" x="34" y="816">DATABASE AND LLM</text>
+        <text class="t-harin" x="34" y="834">M1 Harin</text>
+        <text class="tech" x="34" y="856">MongoDB Atlas</text>
+        <text class="tech" x="34" y="873">Google Gemini API</text>
+
+        <!-- Users -->
+        <rect class="neutral" x="451" y="28" width="190" height="38" rx="8"/>
+        <text class="name mid" x="546" y="52">Employee</text>
+        <rect class="neutral" x="968" y="28" width="190" height="38" rx="8"/>
+        <text class="name mid" x="1063" y="52">HR Reviewer</text>
+
+        <!-- Frontend: M3 -->
+        <rect class="bhuvi" x="226" y="128" width="640" height="132" rx="8"/>
+        <text class="name" x="238" y="149">M3 Main Frontend</text>
+        <text class="sub" x="238" y="166">Layout, routing, role switcher and 8 main pages</text>
+        <rect class="chip" x="238" y="176" width="148" height="32" rx="6"/>
+        <text class="mid" x="312" y="196">Skill Profile</text>
+        <rect class="chip" x="394" y="176" width="148" height="32" rx="6"/>
+        <text class="mid" x="468" y="196">Gap Heatmap</text>
+        <rect class="chip" x="550" y="176" width="148" height="32" rx="6"/>
+        <text class="mid" x="624" y="196">Knowledge Graph</text>
+        <rect class="chip" x="706" y="176" width="148" height="32" rx="6"/>
+        <text class="mid" x="780" y="196">Forecast Dashboard</text>
+        <rect class="chip" x="238" y="216" width="148" height="32" rx="6"/>
+        <text class="mid" x="312" y="236">Skill Forecast</text>
+        <rect class="chip" x="394" y="216" width="148" height="32" rx="6"/>
+        <text class="mid" x="468" y="236">Learning Path</text>
+        <rect class="chip" x="550" y="216" width="148" height="32" rx="6"/>
+        <text class="mid" x="624" y="236">Internal Mobility</text>
+        <rect class="chip" x="706" y="216" width="148" height="32" rx="6"/>
+        <text class="mid" x="780" y="236">Career Paths</text>
+
+        <!-- Frontend: M4 -->
+        <rect class="krish" x="882" y="128" width="362" height="132" rx="8"/>
+        <text class="name" x="894" y="149">M4 Supporting Frontend</text>
+        <text class="sub" x="894" y="166">ExplanationPanel, StatusBadge, docs</text>
+        <rect class="chip" x="894" y="176" width="165" height="32" rx="6"/>
+        <text class="mid" x="976" y="196">Risk Table</text>
+        <rect class="human" x="1067" y="176" width="165" height="32" rx="6"/>
+        <text class="mid" x="1149" y="196">HR Review</text>
+        <rect class="chip" x="894" y="216" width="165" height="32" rx="6"/>
+        <text class="mid" x="976" y="236">Audit Log</text>
+        <rect class="chip" x="1067" y="216" width="165" height="32" rx="6"/>
+        <text class="mid" x="1149" y="236">Analytics Report</text>
+
+        <rect class="bhuvi" x="226" y="270" width="1018" height="30" rx="6"/>
+        <text class="mid" x="735" y="290"><tspan class="mono">api.js</tspan> shared fetch client, sends the demo role on every call</text>
+
+        <!-- REST API -->
+        <rect class="harshit" x="226" y="362" width="190" height="68" rx="8"/>
+        <text class="name mid" x="321" y="383">Skills API</text>
+        <text class="mono mid" x="321" y="401">/skills  /employees</text>
+        <text class="mono mid" x="321" y="417">/gaps  /graph</text>
+        <rect class="harshit" x="502" y="362" width="190" height="68" rx="8"/>
+        <text class="name mid" x="597" y="383">Forecast API</text>
+        <text class="mono mid" x="597" y="401">/market  /forecast</text>
+        <text class="mono mid" x="597" y="417">/readiness  /risk</text>
+        <rect class="harshit" x="778" y="362" width="190" height="68" rx="8"/>
+        <text class="name mid" x="873" y="383">Recommendations API</text>
+        <text class="mono mid" x="873" y="401">/courses  /learning</text>
+        <text class="mono mid" x="873" y="417">/mobility  /career</text>
+        <rect class="harshit" x="1054" y="362" width="190" height="68" rx="8"/>
+        <text class="name mid" x="1149" y="383">Governance API</text>
+        <text class="mono mid" x="1149" y="401">/reviews  /audit</text>
+        <text class="mono mid" x="1149" y="417">/reports  /health  /me</text>
+
+        <!-- Backend services -->
+        <rect class="harshit" x="226" y="492" width="190" height="64" rx="8"/>
+        <text class="name mid" x="321" y="513">Skills Service</text>
+        <text class="sub mid" x="321" y="531">Effective levels</text>
+        <text class="sub mid" x="321" y="546">Current gaps</text>
+        <rect class="harshit" x="502" y="492" width="190" height="64" rx="8"/>
+        <text class="name mid" x="597" y="513">Risk Service</text>
+        <text class="sub mid" x="597" y="531">Future gaps, risk</text>
+        <text class="sub mid" x="597" y="546">Readiness index</text>
+        <rect class="harshit" x="778" y="492" width="190" height="64" rx="8"/>
+        <text class="name mid" x="873" y="513">Recommendation Service</text>
+        <text class="sub mid" x="873" y="531">Learning paths</text>
+        <text class="sub mid" x="873" y="546">Mobility, career paths</text>
+        <rect class="harshit" x="1054" y="492" width="190" height="64" rx="8"/>
+        <text class="name mid" x="1149" y="513">Governance Service</text>
+        <text class="sub mid" x="1149" y="531">Review queue, audit log</text>
+        <text class="sub mid" x="1149" y="546">Report data</text>
+
+        <rect class="harshit" x="226" y="566" width="1018" height="30" rx="6"/>
+        <text class="mid" x="735" y="586">Shared: Pydantic schemas, Explanation contract, fairness guard, demo role check</text>
+
+        <!-- Data, models and AI -->
+        <rect class="harin offline" x="226" y="658" width="186" height="84" rx="8"/>
+        <text class="name mid" x="319" y="679">Dummy Data Generator</text>
+        <text class="mono mid" x="319" y="697">seed/generate_seed.py</text>
+        <text class="sub mid" x="319" y="714">Fixed random seed</text>
+        <text class="sub mid" x="319" y="730">Only Harin resets it</text>
+        <rect class="harin offline" x="434" y="658" width="186" height="84" rx="8"/>
+        <text class="name mid" x="527" y="679">Local ML Model</text>
+        <text class="mono mid" x="527" y="697">ml/train_forecast.py</text>
+        <text class="sub mid" x="527" y="714">scikit-learn Ridge</text>
+        <text class="sub mid" x="527" y="730">Backtest vs naive</text>
+        <rect class="harin" x="642" y="658" width="186" height="84" rx="8"/>
+        <text class="name mid" x="735" y="679">Knowledge Graph</text>
+        <text class="mono mid" x="735" y="697">app/ai/graph.py</text>
+        <text class="sub mid" x="735" y="714">NetworkX in memory</text>
+        <text class="sub mid" x="735" y="730">Centrality, pathfinding</text>
+        <rect class="harin" x="850" y="658" width="186" height="84" rx="8"/>
+        <text class="name mid" x="943" y="679">Data Access</text>
+        <text class="mono mid" x="943" y="697">app/db.py</text>
+        <text class="sub mid" x="943" y="714">pymongo connection</text>
+        <text class="sub mid" x="943" y="730">Unique indexes</text>
+        <rect class="harin" x="1058" y="658" width="186" height="84" rx="8"/>
+        <text class="name mid" x="1151" y="679">Gemini Helper</text>
+        <text class="mono mid" x="1151" y="697">app/ai/llm.py</text>
+        <text class="sub mid" x="1151" y="714">Cache, ID check</text>
+        <text class="sub mid" x="1151" y="730">Template fallback</text>
+
+        <!-- Database and LLM -->
+        <rect class="harin" x="226" y="804" width="810" height="84" rx="8"/>
+        <text class="name" x="238" y="823">MongoDB Atlas</text>
+        <text class="sub" x="340" y="823">Shared free cluster, database: workforce</text>
+        <rect class="chip" x="238" y="832" width="380" height="46" rx="6"/>
+        <text class="name" x="248" y="850">Dummy data</text>
+        <text class="sub" x="248" y="868">skills, roles, employees, courses, open_roles, market_signals</text>
+        <rect class="chip" x="626" y="832" width="170" height="46" rx="6"/>
+        <text class="name" x="636" y="850">Model output</text>
+        <text class="sub" x="636" y="868">forecasts, model_runs</text>
+        <rect class="human" x="804" y="832" width="220" height="46" rx="6"/>
+        <text class="name" x="814" y="850">Runtime</text>
+        <text class="sub" x="814" y="868">reviews, audit_log, llm_cache</text>
+
+        <rect class="harin" x="1058" y="804" width="186" height="84" rx="8"/>
+        <text class="name mid" x="1151" y="828">Gemini API</text>
+        <text class="mono mid" x="1151" y="847">gemini-3.8-flash</text>
+        <text class="sub mid" x="1151" y="866">Dummy data only</text>
+
+        <!-- Users to frontend -->
+        <line class="flow" x1="546" y1="66" x2="546" y2="115" marker-end="url(#arrow)"/>
+        <text class="label" x="554" y="101">own profile, gaps, learning, career</text>
+        <line class="flow" x1="1063" y1="66" x2="1063" y2="115" marker-end="url(#arrow)"/>
+        <text class="label" x="1071" y="101">forecasts, risk, reviews, report</text>
+
+        <!-- Frontend to API -->
+        <line class="flow" x1="735" y1="301" x2="735" y2="349" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+        <text class="label" x="745" y="335">HTTP + JSON through the Vite /api proxy</text>
+
+        <!-- Routers to services -->
+        <line class="flow" x1="321" y1="430" x2="321" y2="491" marker-end="url(#arrow)"/>
+        <text class="label" x="329" y="466">calls</text>
+        <line class="flow" x1="597" y1="430" x2="597" y2="491" marker-end="url(#arrow)"/>
+        <text class="label" x="605" y="466">calls</text>
+        <line class="flow" x1="873" y1="430" x2="873" y2="491" marker-end="url(#arrow)"/>
+        <text class="label" x="881" y="466">calls</text>
+        <line class="flow" x1="1149" y1="430" x2="1149" y2="491" marker-end="url(#arrow)"/>
+        <text class="label" x="1157" y="466">calls</text>
+
+        <!-- Between services -->
+        <line class="flow" x1="417" y1="524" x2="501" y2="524" marker-end="url(#arrow)"/>
+        <text class="label mid" x="459" y="517">supply</text>
+        <line class="flow" x1="693" y1="524" x2="777" y2="524" marker-end="url(#arrow)"/>
+        <text class="label mid" x="735" y="517">demand</text>
+        <line class="flow-human" x1="969" y1="524" x2="1053" y2="524" marker-end="url(#arrow-human)"/>
+        <text class="label-human mid" x="1011" y="517">submit review</text>
+
+        <!-- Services to data and AI -->
+        <line class="flow" x1="735" y1="596" x2="735" y2="657" marker-end="url(#arrow)"/>
+        <text class="label-mono" x="743" y="633">get_graph(), centrality()</text>
+        <line class="flow" x1="943" y1="596" x2="943" y2="657" marker-end="url(#arrow)"/>
+        <text class="label" x="951" y="633">reads, writes</text>
+        <line class="flow" x1="1151" y1="596" x2="1151" y2="657" marker-end="url(#arrow)"/>
+        <text class="label-mono" x="1159" y="633">generate_json()</text>
+
+        <!-- Data and AI to storage -->
+        <line class="flow flow-offline" x1="319" y1="742" x2="319" y2="803" marker-end="url(#arrow)"/>
+        <text class="label" x="327" y="779">writes dummy data</text>
+        <line class="flow flow-offline" x1="527" y1="743" x2="527" y2="803" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+        <text class="label" x="535" y="779">reads signals, writes forecasts</text>
+        <line class="flow" x1="735" y1="742" x2="735" y2="803" marker-end="url(#arrow)"/>
+        <text class="label" x="743" y="779">reads skills, roles</text>
+        <line class="flow" x1="943" y1="742" x2="943" y2="803" marker-end="url(#arrow)"/>
+        <text class="label" x="951" y="779">queries, writes</text>
+        <line class="flow" x1="1151" y1="742" x2="1151" y2="803" marker-end="url(#arrow)"/>
+        <text class="label" x="1159" y="779">JSON mode</text>
+
+        <!-- Legend -->
+        <line class="flow" x1="226" y1="926" x2="266" y2="926" marker-end="url(#arrow)"/>
+        <text class="sub" x="274" y="930">Live request</text>
+        <line class="flow flow-offline" x1="370" y1="926" x2="410" y2="926" marker-end="url(#arrow)"/>
+        <text class="sub" x="418" y="930">Offline job, run by hand</text>
+        <line class="flow-human" x1="572" y1="926" x2="612" y2="926" marker-end="url(#arrow-human)"/>
+        <text class="sub" x="620" y="930">Human review</text>
+        <rect class="bhuvi" x="740" y="919" width="14" height="14" rx="3"/>
+        <text class="sub" x="760" y="930">Bhuvi</text>
+        <rect class="krish" x="822" y="919" width="14" height="14" rx="3"/>
+        <text class="sub" x="842" y="930">Krish</text>
+        <rect class="harshit" x="902" y="919" width="14" height="14" rx="3"/>
+        <text class="sub" x="922" y="930">Harshit</text>
+        <rect class="harin" x="994" y="919" width="14" height="14" rx="3"/>
+        <text class="sub" x="1014" y="930">Harin</text>
+      </svg>
+    </div>
+    <figcaption>Live requests run from React through the FastAPI routers and services to MongoDB and Gemini. Offline jobs load the data and store forecasts before the app runs.</figcaption>
+  </figure>
+
+  <h2>How the three paths work</h2>
+  <ul class="paths">
+    <li><strong>Live request</strong>A page calls <code>api.js</code>, a router calls its service, and the service reads MongoDB. The API serves stored forecasts and never trains during a request.</li>
+    <li><strong>Offline job</strong>The seed script loads dummy data. The training script reads market signals, fits the local model, then stores forecasts and accuracy results.</li>
+    <li><strong>Human review</strong>Recommendations enter the review queue and HR decides from the HR Review page. Decisions are saved with an audit entry, and rejected items are hidden from employees.</li>
+  </ul>
+</main>
+</body>
+</html>
