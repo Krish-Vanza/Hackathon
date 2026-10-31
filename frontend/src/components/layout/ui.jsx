@@ -2,12 +2,25 @@ import { Component } from "react";
 
 export const pct = (fraction) => (fraction === null || fraction === undefined ? "-" : `${Math.round(fraction * 100)}%`);
 
+const BUTTON_VARIANTS = {
+  primary: "bg-brand-700 text-white hover:bg-brand-800",
+  secondary: "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50",
+  danger: "bg-red-700 text-white hover:bg-red-800",
+};
+
+// Shared so a <button> and a <Link> styled as one stay identical.
+export function buttonClass(variant = "primary") {
+  return `inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${BUTTON_VARIANTS[variant]}`;
+}
+
+export const fieldClass = "rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900";
+
 export function PageHeader({ title, subtitle, children }) {
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+      <div className="min-w-0">
+        <h1 className="text-[1.65rem] leading-tight font-semibold tracking-tight text-slate-900">{title}</h1>
+        {subtitle && <p className="mt-1 max-w-3xl text-sm text-slate-500">{subtitle}</p>}
       </div>
       {children}
     </div>
@@ -16,10 +29,10 @@ export function PageHeader({ title, subtitle, children }) {
 
 export function Card({ title, action, className = "", children }) {
   return (
-    <section className={`rounded-xl border border-slate-200 bg-white p-5 ${className}`}>
+    <section className={`rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)] ${className}`}>
       {(title || action) && (
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          {title && <h2 className="text-sm font-semibold text-slate-700">{title}</h2>}
+          {title && <h2 className="text-sm font-semibold text-slate-800">{title}</h2>}
           {action}
         </div>
       )}
@@ -28,20 +41,41 @@ export function Card({ title, action, className = "", children }) {
   );
 }
 
-export function Stat({ label, value, hint }) {
+export function Stat({ label, value, hint, icon: Icon }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-xs font-medium text-slate-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
+      <div className="flex items-start justify-between gap-2">
+        <p className="text-xs font-medium text-slate-500">{label}</p>
+        {Icon && (
+          <span aria-hidden className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+            <Icon size={15} />
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-[1.65rem] leading-tight font-semibold tracking-tight text-slate-900 tabular-nums">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+    </div>
+  );
+}
+
+// A 0 to 1 value as a thin bar. Callers show the number beside it.
+export function Meter({ value, className = "bg-brand-600" }) {
+  const width = `${Math.round(Math.min(1, Math.max(0, value)) * 100)}%`;
+  return (
+    <div aria-hidden className="h-1.5 w-full rounded-full bg-slate-100">
+      <div className={`h-1.5 rounded-full ${className}`} style={{ width }} />
     </div>
   );
 }
 
 export function Loading() {
   return (
-    <div role="status" className="py-10 text-center text-sm text-slate-500">
-      Loading...
+    <div role="status" className="animate-pulse space-y-3 py-4">
+      <span className="sr-only">Loading...</span>
+      <div className="h-4 w-1/3 rounded bg-slate-200" />
+      <div className="h-4 w-full rounded bg-slate-100" />
+      <div className="h-4 w-5/6 rounded bg-slate-100" />
+      <div className="h-4 w-2/3 rounded bg-slate-100" />
     </div>
   );
 }

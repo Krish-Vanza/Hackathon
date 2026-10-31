@@ -2,9 +2,13 @@
 // `npm run dev:mock` serves src/mocks/mockApi.js instead of calling FastAPI.
 const USE_MOCK = import.meta.env.MODE === "mock";
 const ROLE_KEY = "demo-role";
+const PERSONA_KEY = "demo-persona";
 const UNREACHABLE = "Cannot reach the API. Is the backend running on port 8000?";
 
-export const ROLES = ["employee", "hr"];
+export const ROLES = ["hr", "employee"];
+
+// The employee the demo signs in as by default. This is the planted demo story.
+export const DEFAULT_EMPLOYEE = "E-0007";
 
 function readStoredRole() {
   try {
@@ -27,6 +31,22 @@ export function setRole(role) {
     localStorage.setItem(ROLE_KEY, role);
   } catch {
     // Storage can be blocked; the role still applies for this session.
+  }
+}
+
+export function getPersona() {
+  try {
+    return localStorage.getItem(PERSONA_KEY) || DEFAULT_EMPLOYEE;
+  } catch {
+    return DEFAULT_EMPLOYEE;
+  }
+}
+
+export function setPersona(employeeId) {
+  try {
+    localStorage.setItem(PERSONA_KEY, employeeId);
+  } catch {
+    // Storage can be blocked; the persona still applies for this session.
   }
 }
 

@@ -6,12 +6,22 @@ from app.services.context import Context
 
 def list_employees() -> list[dict]:
     ctx = context.load()
-    return [
-        {"employee_id": row["employee_id"], "role_id": row["role_id"],
-         "role_title": ctx.roles.get(row["role_id"], {}).get("title", row["role_id"]),
-         "department": row["department"]}
-        for row in sorted(ctx.employees.values(), key=lambda row: row["employee_id"])
-    ]
+    criticality = ctx.criticalities()
+    rows = []
+    for row in sorted(ctx.employees.values(), key=lambda row: row["employee_id"]):
+        employee_id = row["employee_id"]
+        role = ctx.roles.get(row["role_id"], {})
+        rows.append({
+            "employee_id": employee_id,
+            "role_id": row["role_id"],
+            "role_title": role.get("title", row["role_id"]),
+            "department": row["department"],
+            "current_role_readiness": scoring.role_readiness(
+                ctx.levels(employee_id), role.get("required_skills", []), criticality
+            ),
+            "gap_count": len(gap_rows(ctx, employee_id, role)),
+        })
+    return rows
 
 
 def gap_rows(ctx: Context, employee_id: str, role: dict) -> list[dict]:

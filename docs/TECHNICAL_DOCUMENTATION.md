@@ -123,7 +123,8 @@ Formulas are in `app/services/scoring.py` as pure functions. The plan left these
 - `rejected` items are hidden from the employee role and stay visible to HR.
 - `overridden` needs both new values and a comment, and the values replace the suggestion in the employee view. The HR page offers this for mobility, learning and career items, where a value reaches the employee.
 - A review can only be decided once. A second decision returns 409.
-- Only `/api/reviews/{id}/decision` and `/api/mobility/roles/{id}/candidates` are HR-only in the API, as listed in the plan. The frontend also limits `/review` and `/audit` to the HR role.
+- The API limits these to HR: `/api/reviews`, `/api/reviews/{id}/decision`, `/api/mobility/roles/{id}/candidates`, `/api/risk`, `/api/audit`, `/api/reports/*` and `/api/gaps/org`. This is wider than the two endpoints in the plan, so that hiding a screen is backed by the server.
+- The frontend routes match: `HrOnly` and `OwnRecord` in `src/App.jsx` send an employee to their own profile from any organization page or another person's record. This is a demo control, because `X-Demo-Role` is not authentication.
 
 ### Fairness guard
 
@@ -239,14 +240,18 @@ React in JavaScript with Vite, Tailwind, Recharts and `react-force-graph-2d`.
 | Path | Purpose |
 |---|---|
 | `src/api.js` | The only place that calls the backend. Sends `X-Demo-Role` on every request |
-| `src/App.jsx` | Routes |
-| `src/hooks/useApi.js` | Loads data on mount, and again when inputs or the demo role change |
-| `src/components/layout/` | App frame, role switcher and shared UI such as `Card`, `Stat` and `Async` |
-| `src/pages/` | The eight main pages |
+| `src/App.jsx` | Routes and the `HrOnly` and `OwnRecord` guards |
+| `src/hooks/useApi.js` | Loads data on mount, and again when inputs or the view change |
+| `src/components/layout/` | App frame, view switch, `RoleContext` (view and demo persona), `EmployeeTabs`, and shared UI such as `Card`, `Stat`, `Meter`, `Async` and `buttonClass` |
+| `src/components/shared/chartTheme.js` | Shared chart colors, ticks and tooltip style |
+| `src/index.css` | Design tokens. `brand` colors follow `data-view`, so HR is indigo and Employee is teal |
+| `src/pages/` | The main pages |
 | `src/mocks/mockApi.js` | Dummy responses for `npm run dev:mock` |
 
 | Route | Page | Main endpoints |
 |---|---|---|
+| `/overview` | Workforce Overview, the HR home page | `readiness`, `risk`, `forecast/skills`, `reviews` |
+| `/employees` | Employees directory | `employees` |
 | `/profile/:id` | Skill Profile | `profile`, `gaps`, `skills/extract` |
 | `/gaps` | Gap Heatmap | `gaps/org` |
 | `/graph` | Knowledge Graph | `graph` |

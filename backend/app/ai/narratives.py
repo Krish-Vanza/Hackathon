@@ -87,7 +87,8 @@ def market_brief(top_skills: list[dict] | None = None) -> dict:
     prompt = (
         "Write a short market intelligence brief for an HR leader about future skill demand.\n"
         "Use only the facts below. Do not invent numbers. Cite each skill by its skill_id.\n"
-        "summary: 2 or 3 sentences. highlights: one sentence per skill.\n\n"
+        "summary: 2 or 3 sentences that name the fastest-growing skills and their growth. "
+        "highlights: one sentence per skill.\n\n"
         f"Facts (JSON):\n{json.dumps(facts)}"
     )
     result, source = generate_json_with_source(prompt, MarketBrief, fallback, _ids_in(facts))

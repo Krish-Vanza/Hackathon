@@ -6,8 +6,8 @@ import { useApi } from "../hooks/useApi.js";
 function cellStyle(severity, max) {
   const strength = max > 0 ? severity / max : 0;
   return {
-    backgroundColor: `rgba(15, 118, 110, ${0.06 + strength * 0.84})`,
-    color: strength > 0.75 ? "#ffffff" : "#0f172a",
+    backgroundColor: `rgba(67, 56, 202, ${0.05 + strength * 0.9})`,
+    color: strength > 0.7 ? "#ffffff" : "#0f172a",
   };
 }
 
@@ -16,7 +16,7 @@ export default function Gaps() {
 
   return (
     <>
-      <PageHeader title="Gap Heatmap" subtitle="Gap severity by department and skill category. Darker cells have larger gaps." />
+      <PageHeader title="Gap Heatmap" subtitle="Average gap severity per person, by department and skill category. Darker cells have larger gaps." />
       <Card>
         <Async state={gaps} isEmpty={(data) => data.cells.length === 0} emptyText="No gap data yet.">
           {(data) => {
@@ -46,7 +46,7 @@ export default function Gaps() {
                         {data.categories.map((category) => {
                           const severity = lookup.get(`${department}|${category}`) ?? 0;
                           return (
-                            <td key={category} style={cellStyle(severity, max)} className="rounded p-3 text-center tabular-nums">
+                            <td key={category} style={cellStyle(severity, max)} className="rounded-lg p-3 text-center font-medium tabular-nums">
                               {severity.toFixed(2)}
                             </td>
                           );

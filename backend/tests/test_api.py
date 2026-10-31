@@ -57,10 +57,34 @@ def test_list_items_carry_explanations(client, path, field):
         Explanation.model_validate(item["explanation"])
 
 
-def test_risk_and_future_gaps_carry_explanations(client):
+def test_risk_and_future_gaps_carry_explanations(client, hr):
     for path in ("/api/risk", "/api/forecast/gaps"):
-        for row in client.get(path).json():
+        for row in client.get(path, headers=hr).json():
             Explanation.model_validate(row["explanation"])
+
+
+@pytest.mark.parametrize("path", [
+    "/api/risk",
+    "/api/reviews",
+    "/api/audit",
+    "/api/reports/workforce",
+    "/api/reports/workforce.csv",
+    "/api/gaps/org",
+])
+def test_org_views_are_hr_only(client, hr, path):
+    assert client.get(path).status_code == 403
+    assert client.get(path, headers={"X-Demo-Role": "employee"}).status_code == 403
+    assert client.get(path, headers=hr).status_code == 200
+
+
+def test_employee_list_covers_everyone_with_readiness(client):
+    rows = client.get("/api/employees").json()
+    assert len(rows) == 12
+    for row in rows:
+        assert 0 <= row["current_role_readiness"] <= 1 and row["gap_count"] >= 0
+    gaps = client.get(f"/api/employees/{STORY_EMPLOYEE}/gaps").json()["gaps"]
+    story = next(row for row in rows if row["employee_id"] == STORY_EMPLOYEE)
+    assert story["gap_count"] == len(gaps)
 
 
 def test_unknown_ids_return_404(client):
@@ -77,8 +101,8 @@ def test_gaps_rank_by_severity_and_skip_surplus(client):
     assert "S-PY" not in {gap["skill_id"] for gap in gaps}
 
 
-def test_org_heatmap_is_a_full_grid(client):
-    body = client.get("/api/gaps/org").json()
+def test_org_heatmap_is_a_full_grid(client, hr):
+    body = client.get("/api/gaps/org", headers=hr).json()
     assert len(body["cells"]) == len(body["departments"]) * len(body["categories"])
 
 
@@ -104,8 +128,8 @@ def test_planted_story_ml_engineer_is_top_match(client):
     assert match["review_label"] == "Awaiting HR review"
 
 
-def test_planted_story_agentic_ai_is_high_risk(client):
-    rows = client.get("/api/risk").json()
+def test_planted_story_agentic_ai_is_high_risk(client, hr):
+    rows = client.get("/api/risk", headers=hr).json()
     agentic = next(row for row in rows if row["skill_id"] == "S-AGENT")
     assert agentic["level"] == "high"
     assert agentic["exposed_departments"] == ["Data"]
@@ -147,7 +171,7 @@ def test_approval_updates_employee_view_and_audit(client, hr):
 
     match = client.get(f"/api/mobility/{STORY_EMPLOYEE}").json()["matches"][0]
     assert match["review_status"] == "approved"
-    event = client.get("/api/audit").json()[0]
+    event = client.get("/api/audit", headers=hr).json()[0]
     assert event["event"] == "review_approved" and event["entity"] == target["review_id"]
 
 
@@ -277,13 +301,13 @@ def test_graph_focus_narrows_nodes(client):
     assert 0 < len(focused["nodes"]) < len(full["nodes"])
 
 
-def test_report_json_and_csv(client):
+def test_report_json_and_csv(client, hr):
     client.get(f"/api/mobility/{STORY_EMPLOYEE}")
-    report = client.get("/api/reports/workforce").json()
+    report = client.get("/api/reports/workforce", headers=hr).json()
     assert report["mobility_pipeline"]["pending"] == 3
     assert report["top_risks"][0]["level"] == "high"
 
-    response = client.get("/api/reports/workforce.csv")
+    response = client.get("/api/reports/workforce.csv", headers=hr)
     assert response.headers["content-type"].startswith("text/csv")
     assert "attachment" in response.headers["content-disposition"]
     rows = list(csv.reader(io.StringIO(response.text)))

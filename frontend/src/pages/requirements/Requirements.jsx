@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useRole } from "../../components/layout/RoleContext.jsx";
-import { ErrorNotice, PageHeader, Stat } from "../../components/layout/ui.jsx";
+import { buttonClass, ErrorNotice, PageHeader, Stat } from "../../components/layout/ui.jsx";
 import ExplanationPanel from "../../components/shared/ExplanationPanel.jsx";
 import { STEPS } from "./steps.js";
 
@@ -52,7 +52,7 @@ function Stepper({ results, index, onSelect }) {
             <button
               onClick={() => onSelect(position)}
               aria-current={position === index ? "step" : undefined}
-              className={`relative flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${position === index ? "bg-teal-50 font-medium text-teal-800" : "text-slate-600 hover:bg-slate-100"}`}
+              className={`relative flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm ${position === index ? "bg-brand-50 font-medium text-brand-800" : "text-slate-600 hover:bg-slate-100"}`}
             >
               <span aria-hidden className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-xs ${state.style}`}>
                 {state.icon}
@@ -90,7 +90,7 @@ function Facts({ facts }) {
 function StepCard({ step, position, result, onRetry }) {
   const state = STATES[stateOf(result)];
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <p className="text-xs font-medium text-slate-500">
@@ -126,7 +126,7 @@ function StepCard({ step, position, result, onRetry }) {
       </ol>
       <div className="mt-3 flex flex-wrap gap-2">
         {[...step.pages, ...(result?.pages || [])].map(([label, path]) => (
-          <Link key={path} to={path} state={{ tourStep: position + 1 }} className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white">
+          <Link key={path} to={path} state={{ tourStep: position + 1 }} className={buttonClass()}>
             Open {label}
           </Link>
         ))}
@@ -138,13 +138,12 @@ function StepCard({ step, position, result, onRetry }) {
 export default function Requirements() {
   const [params, setParams] = useSearchParams();
   const [results, rerun] = useChecks();
-  const { role } = useRole();
   const index = Math.min(STEPS.length - 1, Math.max(0, (Number(params.get("step")) || 1) - 1));
   const step = STEPS[index];
   const done = Object.keys(results).length;
   const passed = Object.values(results).filter((result) => result.passed).length;
   const select = (position) => setParams({ step: String(position + 1) });
-  const button = "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 disabled:opacity-40";
+  const button = buttonClass("secondary");
 
   return (
     <>
@@ -157,7 +156,6 @@ export default function Requirements() {
         <Stat label="Requirements verified" value={`${passed} of ${STEPS.length}`} hint={done < STEPS.length ? "Checks are still running" : "From live API responses"} />
         <Stat label="Current step" value={step.id} hint={step.title} />
       </div>
-      {role !== "hr" && <p className="mb-4 rounded-md bg-amber-50 p-2 text-sm text-amber-900">You are viewing as Employee, so items HR rejected stay hidden. Set Demo role to HR for the full tour.</p>}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[16rem_minmax(0,1fr)]">
         <nav aria-label="Requirements" className="min-w-0 rounded-xl border border-slate-200 bg-white p-2">
           <Stepper results={results} index={index} onSelect={select} />
@@ -169,7 +167,7 @@ export default function Requirements() {
               Back
             </button>
             {index < STEPS.length - 1 ? (
-              <button onClick={() => select(index + 1)} className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white">
+              <button onClick={() => select(index + 1)} className={buttonClass()}>
                 Next: {STEPS[index + 1].id}
               </button>
             ) : (

@@ -1,6 +1,5 @@
 import { api } from "../../api.js";
-import { useRole } from "../../components/layout/RoleContext.jsx";
-import { Async, Card, ErrorNotice, PageHeader } from "../../components/layout/ui.jsx";
+import { Async, Card, PageHeader } from "../../components/layout/ui.jsx";
 import { dateTime, REVIEW_TYPES } from "../../components/shared/format.js";
 import { useApi } from "../../hooks/useApi.js";
 
@@ -24,7 +23,7 @@ function AuditTable() {
     <Card
       title="Events, newest first"
       action={
-        <button onClick={audit.reload} className="text-sm font-medium text-teal-700 underline">
+        <button onClick={audit.reload} className="text-sm font-medium text-brand-700 underline">
           Refresh
         </button>
       }
@@ -32,7 +31,7 @@ function AuditTable() {
       <Async state={audit} isEmpty={(data) => data.length === 0} emptyText="No events yet.">
         {(events) => (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-sm">
+            <table className="data-table w-full min-w-[40rem] text-sm">
               <thead className="text-left text-xs text-slate-500">
                 <tr>
                   {COLUMNS.map((column) => (
@@ -62,11 +61,10 @@ function AuditTable() {
 }
 
 export default function Audit() {
-  const { role } = useRole();
   return (
     <>
       <PageHeader title="Audit Log" subtitle="Every queued suggestion and HR decision." />
-      {role === "hr" ? <AuditTable /> : <ErrorNotice error={{ status: 403 }} />}
+      <AuditTable />
     </>
   );
 }

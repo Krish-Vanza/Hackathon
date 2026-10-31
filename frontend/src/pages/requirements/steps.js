@@ -1,5 +1,4 @@
-import { api } from "../../api.js";
-import { DEFAULT_EMPLOYEE as EMPLOYEE } from "../../components/layout/Layout.jsx";
+import { api, DEFAULT_EMPLOYEE as EMPLOYEE } from "../../api.js";
 
 const SAMPLE_TEXT = "Built Python services and SQL reports, then deployed them on Kubernetes.";
 
@@ -111,7 +110,7 @@ export const STEPS = [
     requirement: "Recommend training and certifications.",
     built: "Courses are scored on gap coverage, future demand and level fit, then ordered so prerequisites come first. Each course carries its own reason.",
     pages: [["Learning Path", `/learning/${EMPLOYEE}`]],
-    show: ["Open the Learning Path and read a reason.", "Choose E-0012 in the Employee menu to see a plan with a certification.", "Note that each plan shows Awaiting HR review."],
+    show: ["Open the Learning Path and read a reason.", "Open E-0012 from Employees to see a plan with a certification.", "Note that each plan shows Awaiting HR review."],
     async check() {
       const [plan, courses] = await Promise.all([api.learning(EMPLOYEE), api.courses()]);
       const available = courses.filter((course) => course.is_certification).length;
@@ -228,7 +227,7 @@ export const STEPS = [
       ["HR Review", "/review"],
       ["Audit Log", "/audit"],
     ],
-    show: ["Set Demo role to HR and open HR Review.", "Approve one item and reject another.", "Switch to Employee and open Internal Mobility. The approved match is labelled and the rejected one is gone.", "Switch back to HR and open the Audit Log to see both decisions."],
+    show: ["In the HR view, open HR Review.", "Approve one item and reject another.", "Switch the view to Employee and open Internal Mobility. The approved match is labelled and the rejected one is gone.", "Switch back to HR and open the Audit Log to see both decisions."],
     async check() {
       const mobility = await api.mobility(EMPLOYEE); // Opening this queues its suggestions.
       const [reviews, audit] = await Promise.all([api.reviews(), api.audit()]);

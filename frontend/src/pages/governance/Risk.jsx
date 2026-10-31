@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api.js";
-import { Async, Card, PageHeader, Stat } from "../../components/layout/ui.jsx";
+import { Async, Card, fieldClass, PageHeader, Stat } from "../../components/layout/ui.jsx";
 import ExplanationPanel from "../../components/shared/ExplanationPanel.jsx";
 import RiskBadge from "../../components/shared/RiskBadge.jsx";
 import { useApi } from "../../hooks/useApi.js";
@@ -47,7 +47,7 @@ function RiskRow({ row, open, onToggle }) {
         <td className="py-2 pr-3 text-right tabular-nums">{row.market_growth.toFixed(0)}</td>
         <td className="py-2 pr-3 text-right tabular-nums">{row.centrality.toFixed(0)}</td>
         <td className="py-2 text-right">
-          <button onClick={onToggle} aria-expanded={open} className="text-teal-700 underline">
+          <button onClick={onToggle} aria-expanded={open} className="text-brand-700 underline">
             {open ? "Hide" : "Why?"}
           </button>
         </td>
@@ -58,7 +58,7 @@ function RiskRow({ row, open, onToggle }) {
             <ExplanationPanel explanation={row.explanation} open />
             <p className="mt-2 text-slate-600">
               Exposed departments: {row.exposed_departments.join(", ") || "None"}.{" "}
-              <Link to={`/forecast/${row.skill_id}`} className="text-teal-700 underline">
+              <Link to={`/forecast/${row.skill_id}`} className="text-brand-700 underline">
                 View forecast
               </Link>
             </p>
@@ -82,7 +82,7 @@ function RiskTable({ rows }) {
           aria-label="Filter by risk level"
           value={level}
           onChange={(event) => setLevel(event.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+          className={fieldClass}
         >
           {FILTERS.map(([value, label]) => (
             <option key={value} value={value}>
@@ -96,7 +96,7 @@ function RiskTable({ rows }) {
         <p className="py-8 text-center text-sm text-slate-500">No skills at this risk level.</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[46rem] text-sm">
+          <table className="data-table w-full min-w-[46rem] text-sm">
             <thead className="text-xs text-slate-500">
               <tr>
                 {COLUMNS.map(([label, align]) => (

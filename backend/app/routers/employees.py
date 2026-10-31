@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.deps import Role
+from app.deps import HrRole, Role
 from app.services import gaps
 
 router = APIRouter(prefix="/api", tags=["employees"])
@@ -22,5 +22,5 @@ def employee_gaps(employee_id: str, role_id: str | None = None):
 
 
 @router.get("/gaps/org")
-def org_gaps():
+def org_gaps(_: HrRole):
     return gaps.org_heatmap()

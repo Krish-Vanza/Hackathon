@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api.js";
-import { useRole } from "../../components/layout/RoleContext.jsx";
-import { Async, Card, ErrorNotice, PageHeader } from "../../components/layout/ui.jsx";
+import { Async, buttonClass, Card, ErrorNotice, fieldClass, PageHeader } from "../../components/layout/ui.jsx";
 import ExplanationPanel from "../../components/shared/ExplanationPanel.jsx";
 import { dateTime, REVIEW_TYPES } from "../../components/shared/format.js";
 import StatusBadge from "../../components/shared/StatusBadge.jsx";
@@ -131,7 +130,6 @@ function DecisionForm({ review, onDecided }) {
     }
   };
 
-  const button = "rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50";
   return (
     <div className="mt-4 border-t border-slate-200 pt-4">
       <label className="block text-sm font-medium text-slate-700">
@@ -154,23 +152,23 @@ function DecisionForm({ review, onDecided }) {
       <div className="mt-3 flex flex-wrap gap-2">
         {overriding ? (
           <>
-            <button onClick={saveOverride} disabled={busy} className={`${button} bg-teal-700 text-white`}>
+            <button onClick={saveOverride} disabled={busy} className={buttonClass()}>
               Save change
             </button>
-            <button onClick={() => setOverriding(false)} disabled={busy} className={`${button} border border-slate-300 text-slate-700`}>
+            <button onClick={() => setOverriding(false)} disabled={busy} className={buttonClass("secondary")}>
               Cancel
             </button>
           </>
         ) : (
           <>
-            <button onClick={() => send("approved")} disabled={busy} className={`${button} bg-teal-700 text-white`}>
+            <button onClick={() => send("approved")} disabled={busy} className={buttonClass()}>
               Approve
             </button>
-            <button onClick={() => send("rejected")} disabled={busy} className={`${button} bg-red-700 text-white`}>
+            <button onClick={() => send("rejected")} disabled={busy} className={buttonClass("danger")}>
               Reject
             </button>
             {fields.length > 0 && (
-              <button onClick={() => setOverriding(true)} disabled={busy} className={`${button} border border-slate-300 text-slate-700`}>
+              <button onClick={() => setOverriding(true)} disabled={busy} className={buttonClass("secondary")}>
                 Override
               </button>
             )}
@@ -194,7 +192,7 @@ function ReviewDetail({ review, onDecided }) {
         <StatusBadge status={review.status} />
       </div>
       <p className="mt-2 text-sm">
-        <Link to={`/${SUBJECT_PAGES[review.type]}/${review.subject_id}`} className="text-teal-700 underline">
+        <Link to={`/${SUBJECT_PAGES[review.type]}/${review.subject_id}`} className="text-brand-700 underline">
           Open {review.subject_id}
         </Link>
       </p>
@@ -221,7 +219,7 @@ function QueueList({ reviews, selectedId, onSelect }) {
           <button
             onClick={() => onSelect(review.review_id)}
             aria-current={selectedId === review.review_id}
-            className={`w-full rounded-md p-2 text-left text-sm ${selectedId === review.review_id ? "bg-teal-50" : "hover:bg-slate-50"}`}
+            className={`w-full rounded-md p-2 text-left text-sm ${selectedId === review.review_id ? "bg-brand-50" : "hover:bg-slate-50"}`}
           >
             <span className="block font-medium">{review.title}</span>
             <span className="mt-1 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
@@ -239,7 +237,7 @@ function Select({ label, value, onChange, options }) {
   return (
     <label className="flex items-center gap-2 text-sm text-slate-600">
       {label}
-      <select value={value} onChange={(event) => onChange(event.target.value)} className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm">
+      <select value={value} onChange={(event) => onChange(event.target.value)} className={fieldClass}>
         {options.map(([optionValue, optionLabel]) => (
           <option key={optionValue} value={optionValue}>
             {optionLabel}
@@ -295,11 +293,10 @@ function ReviewQueue() {
 }
 
 export default function Review() {
-  const { role } = useRole();
   return (
     <>
       <PageHeader title="HR Review" subtitle="Every AI suggestion waits here. A person approves, rejects or changes it, and nothing is applied automatically." />
-      {role === "hr" ? <ReviewQueue /> : <ErrorNotice error={{ status: 403 }} />}
+      <ReviewQueue />
     </>
   );
 }

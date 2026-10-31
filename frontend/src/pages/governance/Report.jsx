@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { api } from "../../api.js";
-import { Async, Card, ErrorNotice, PageHeader, pct, Stat } from "../../components/layout/ui.jsx";
+import { Async, buttonClass, Card, ErrorNotice, PageHeader, pct, Stat } from "../../components/layout/ui.jsx";
 import ExplanationPanel from "../../components/shared/ExplanationPanel.jsx";
-import { dateTime } from "../../components/shared/format.js";
+import { dateTime, percent } from "../../components/shared/format.js";
 import RiskBadge from "../../components/shared/RiskBadge.jsx";
 import { useApi } from "../../hooks/useApi.js";
 
@@ -13,13 +13,10 @@ const PIPELINE = [
   ["rejected", "Rejected"],
 ];
 
-// The readiness API already returns percentages, unlike the 0 to 1 fractions elsewhere.
-const percent = (value) => `${value.toFixed(1)}%`;
-
 function Table({ columns, rows }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[28rem] text-sm">
+      <table className="data-table w-full min-w-[28rem] text-sm">
         <thead className="text-xs text-slate-500">
           <tr>
             {columns.map(([label, , align]) => (
@@ -136,10 +133,10 @@ function ReportActions() {
   return (
     <div className="print:hidden">
       <div className="flex flex-wrap gap-2">
-        <button onClick={() => window.print()} className="rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white">
+        <button onClick={() => window.print()} className={buttonClass()}>
           Print or save as PDF
         </button>
-        <button onClick={downloadCsv} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700">
+        <button onClick={downloadCsv} className={buttonClass("secondary")}>
           Download CSV
         </button>
       </div>

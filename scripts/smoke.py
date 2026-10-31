@@ -80,6 +80,8 @@ def main():
     call("/api/reviews/__smoke__/decision", 404, body={"decision": "approved"})
     call("/api/reviews/__smoke__/decision", 403, role="employee", body={"decision": "approved"})
     call(f"/api/mobility/roles/{role}/candidates", 403, role="employee")
+    for path in ("/api/risk", "/api/reviews", "/api/audit", "/api/gaps/org", "/api/reports/workforce", "/api/reports/workforce.csv"):
+        call(path, 403, role="employee")
 
     print(f"\n{failures} failed" if failures else "\nAll endpoints passed")
     return 1 if failures else 0

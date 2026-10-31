@@ -2,7 +2,9 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { api } from "../api.js";
-import { Async, Card, ErrorNotice, PageHeader, pct } from "../components/layout/ui.jsx";
+import { useRole } from "../components/layout/RoleContext.jsx";
+import { Async, buttonClass, Card, ErrorNotice, fieldClass, PageHeader, pct } from "../components/layout/ui.jsx";
+import { CHART, TICK, TOOLTIP_STYLE } from "../components/shared/chartTheme.js";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
 import StatusBadge from "../components/shared/StatusBadge.jsx";
 import { useApi } from "../hooks/useApi.js";
@@ -13,11 +15,11 @@ function SkillRadar({ skills }) {
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="70%">
-          <PolarGrid stroke="#e2e8f0" />
-          <PolarAngleAxis dataKey="skill" tick={{ fontSize: 11, fill: "#475569" }} />
-          <PolarRadiusAxis domain={[0, 5]} tickCount={6} tick={{ fontSize: 10 }} />
-          <Radar dataKey="Current" stroke="#0f766e" fill="#0f766e" fillOpacity={0.35} isAnimationActive={false} />
-          <Tooltip />
+          <PolarGrid stroke={CHART.grid} />
+          <PolarAngleAxis dataKey="skill" tick={TICK} />
+          <PolarRadiusAxis domain={[0, 5]} tickCount={6} tick={false} axisLine={false} />
+          <Radar dataKey="Current" stroke={CHART.accent} strokeWidth={2} fill={CHART.accent} fillOpacity={0.2} isAnimationActive={false} />
+          <Tooltip contentStyle={TOOLTIP_STYLE} />
         </RadarChart>
       </ResponsiveContainer>
     </div>
@@ -118,12 +120,9 @@ function SkillExtractor({ employeeId, claims = [], onExtracted }) {
           onChange={(event) => setText(event.target.value)}
           rows={3}
           placeholder="Paste a project summary. Use dummy text only."
-          className="w-full rounded-md border border-slate-300 p-2 text-sm"
+          className={`${fieldClass} w-full`}
         />
-        <button
-          disabled={busy || !text.trim()}
-          className="mt-2 rounded-md bg-teal-700 px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
-        >
+        <button disabled={busy || !text.trim()} className={`${buttonClass()} mt-2`}>
           {busy ? "Extracting..." : "Extract"}
         </button>
       </form>
@@ -153,6 +152,7 @@ function SkillExtractor({ employeeId, claims = [], onExtracted }) {
 
 export default function Profile() {
   const { id } = useParams();
+  const { role } = useRole();
   const profile = useApi(() => api.profile(id), [id]);
 
   return (
@@ -160,8 +160,8 @@ export default function Profile() {
       <Async state={profile} isEmpty={(data) => data.skills.length === 0} emptyText="This employee has no recorded skills.">
         {(data) => (
           <>
-            <PageHeader title={`Skill Profile: ${data.employee_id}`} subtitle={`${data.role_title} · ${data.department}`}>
-              <Link to={`/learning/${data.employee_id}`} className="text-sm font-medium text-teal-700 underline">
+            <PageHeader title={role === "hr" ? `Skill Profile: ${data.employee_id}` : "My Skill Profile"} subtitle={`${data.role_title} · ${data.department}`}>
+              <Link to={`/learning/${data.employee_id}`} className={buttonClass("secondary")}>
                 View learning path
               </Link>
             </PageHeader>

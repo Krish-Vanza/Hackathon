@@ -10,12 +10,12 @@ router = APIRouter(prefix="/api", tags=["risk and governance"])
 
 
 @router.get("/risk")
-def risks():
+def risks(_: HrRole):
     return risk.risks()
 
 
 @router.get("/reviews")
-def list_reviews(status: ReviewStatus | None = None, type: ReviewType | None = None):
+def list_reviews(_: HrRole, status: ReviewStatus | None = None, type: ReviewType | None = None):
     return reviews.list_reviews(status, type)
 
 
@@ -25,17 +25,17 @@ def decide(review_id: str, body: DecisionRequest, actor: HrRole):
 
 
 @router.get("/audit")
-def audit_events(limit: Annotated[int, Query(ge=1, le=1000)] = 200):
+def audit_events(_: HrRole, limit: Annotated[int, Query(ge=1, le=1000)] = 200):
     return audit.events(limit)
 
 
 @router.get("/reports/workforce")
-def workforce_report():
+def workforce_report(_: HrRole):
     return reports.workforce()
 
 
 @router.get("/reports/workforce.csv")
-def workforce_report_csv():
+def workforce_report_csv(_: HrRole):
     return Response(
         reports.workforce_csv(),
         media_type="text/csv",

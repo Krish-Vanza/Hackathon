@@ -496,6 +496,18 @@ function workforceReport() {
   };
 }
 
+// Matches the HR-only routes in the FastAPI routers.
+const hrOnly = (handler) => (params, query, context) => {
+  if (context.role !== "hr") throw new MockError(403, "HR role required");
+  return handler(params, query, context);
+};
+
+function employeeRow(employee) {
+  const { employee_id, role_id, department } = employee;
+  const { readiness, missing_skills: missing } = matchFor(employee, role_id);
+  return { employee_id, role_id, role_title: ROLES[role_id].title, department, current_role_readiness: readiness, gap_count: missing.length };
+}
+
 function workforceCsv() {
   const { note, top_risks: risks } = workforceReport();
   return [note, "Skill ID,Skill,Risk score,Risk level", ...risks.map((row) => `${row.skill_id},${row.name},${row.score},${row.level}`)].join("\n");
@@ -505,10 +517,10 @@ const routes = [
   ["GET", /^\/api\/health$/, () => ({ status: "ok", database: "ok", data_source: "mock", llm_mode: "mock" })],
   ["GET", /^\/api\/me$/, (_, __, { role }) => ({ role })],
   ["GET", /^\/api\/skills$/, () => SKILLS],
-  ["GET", /^\/api\/employees$/, () => EMPLOYEES.map(({ employee_id, role_id, department }) => ({ employee_id, role_id, role_title: ROLES[role_id].title, department }))],
+  ["GET", /^\/api\/employees$/, () => EMPLOYEES.map(employeeRow)],
   ["GET", /^\/api\/employees\/([^/]+)\/profile$/, ([employeeId]) => profile(employeeId)],
   ["GET", /^\/api\/employees\/([^/]+)\/gaps$/, ([employeeId], query) => gaps(employeeId, query.get("role_id"))],
-  ["GET", /^\/api\/gaps\/org$/, orgGaps],
+  ["GET", /^\/api\/gaps\/org$/, hrOnly(orgGaps)],
   ["GET", /^\/api\/graph$/, (_, query) => graph(query.get("focus"))],
   ["POST", /^\/api\/skills\/extract$/, (_, __, { body }) => extractSkills(body?.text)],
   [
@@ -546,12 +558,12 @@ const routes = [
   ["GET", /^\/api\/mobility\/roles\/([^/]+)\/candidates$/, ([roleId], _, { role }) => roleCandidates(roleId, role)],
   ["GET", /^\/api\/mobility\/([^/]+)$/, ([employeeId]) => mobility(employeeId)],
   ["GET", /^\/api\/career\/([^/]+)$/, ([employeeId]) => career(employeeId)],
-  ["GET", /^\/api\/risk$/, riskRows],
-  ["GET", /^\/api\/reviews$/, (_, query) => listReviews(query.get("status"), query.get("type"))],
+  ["GET", /^\/api\/risk$/, hrOnly(riskRows)],
+  ["GET", /^\/api\/reviews$/, hrOnly((_, query) => listReviews(query.get("status"), query.get("type")))],
   ["POST", /^\/api\/reviews\/([^/]+)\/decision$/, ([reviewId], _, { body, role }) => decideReview(reviewId, body, role)],
-  ["GET", /^\/api\/audit$/, () => auditEvents],
-  ["GET", /^\/api\/reports\/workforce$/, workforceReport],
-  ["GET", /^\/api\/reports\/workforce\.csv$/, workforceCsv],
+  ["GET", /^\/api\/audit$/, hrOnly(() => auditEvents)],
+  ["GET", /^\/api\/reports\/workforce$/, hrOnly(workforceReport)],
+  ["GET", /^\/api\/reports\/workforce\.csv$/, hrOnly(workforceCsv)],
 ];
 
 export async function mockRequest(path, { method, body, role }) {

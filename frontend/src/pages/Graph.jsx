@@ -3,10 +3,9 @@ import ForceGraph2D from "react-force-graph-2d";
 import { Link } from "react-router-dom";
 import { api } from "../api.js";
 import { Async, Card, PageHeader } from "../components/layout/ui.jsx";
+import { CHART } from "../components/shared/chartTheme.js";
 import { useApi } from "../hooks/useApi.js";
 
-const SKILL_COLOR = "#0f766e";
-const ROLE_COLOR = "#b45309";
 const EDGE_LABELS = { prerequisite_of: "Prerequisite of", related_to: "Related to", required_by: "Required by" };
 
 function useElementWidth() {
@@ -32,8 +31,8 @@ function GraphCanvas({ data, onSelect }) {
   // Spread nodes out so labels stay readable. distanceMax stops unconnected nodes drifting away,
   // which would make zoom-to-fit shrink everything else. The ref is set once the canvas mounts.
   useEffect(() => {
-    graphRef.current?.d3Force("charge")?.strength(-260).distanceMax(170);
-    graphRef.current?.d3Force("link")?.distance(75);
+    graphRef.current?.d3Force("charge")?.strength(-520).distanceMax(320);
+    graphRef.current?.d3Force("link")?.distance(105);
     graphRef.current?.d3ReheatSimulation();
   }, [width > 0, data]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -47,27 +46,27 @@ function GraphCanvas({ data, onSelect }) {
   );
 
   return (
-    <div ref={ref} className="h-[520px] overflow-hidden rounded-lg bg-slate-50">
+    <div ref={ref} className="h-[640px] overflow-hidden rounded-lg bg-slate-50">
       {width > 0 && (
         <ForceGraph2D
           ref={graphRef}
           graphData={graphData}
           width={width}
-          height={520}
+          height={640}
           cooldownTicks={120}
-          onEngineStop={() => graphRef.current?.zoomToFit(300, 40)}
+          onEngineStop={() => graphRef.current?.zoomToFit(300, 56)}
           nodeLabel="label"
           nodeRelSize={NODE_REL_SIZE}
           nodeVal={nodeVal}
-          nodeColor={(node) => (node.type === "role" ? ROLE_COLOR : SKILL_COLOR)}
+          nodeColor={(node) => (node.type === "role" ? CHART.role : CHART.skill)}
           linkColor={() => "#cbd5e1"}
           linkDirectionalArrowLength={3}
           linkDirectionalArrowRelPos={1}
           onNodeClick={(node) => onSelect(node.id)}
           nodeCanvasObjectMode={() => "after"}
           nodeCanvasObject={(node, context, scale) => {
-            context.font = `${11 / scale}px sans-serif`;
-            context.fillStyle = "#334155";
+            context.font = `${11 / scale}px "Inter Variable", sans-serif`;
+            context.fillStyle = CHART.label;
             context.textAlign = "center";
             context.textBaseline = "top";
             context.fillText(node.label, node.x, node.y + nodeRadius(node) + 3 / scale);
@@ -106,11 +105,11 @@ function SidePanel({ data, selectedId, focus, onFocus }) {
         })}
       </ul>
       <div className="mt-4 flex flex-wrap gap-3">
-        <button onClick={() => onFocus(focus === node.id ? null : node.id)} className="font-medium text-teal-700 underline">
+        <button onClick={() => onFocus(focus === node.id ? null : node.id)} className="font-medium text-brand-700 underline">
           {focus === node.id ? "Show full graph" : "Focus on this node"}
         </button>
         {node.type === "skill" && (
-          <Link to={`/forecast/${node.id}`} className="font-medium text-teal-700 underline">
+          <Link to={`/forecast/${node.id}`} className="font-medium text-brand-700 underline">
             View forecast
           </Link>
         )}
@@ -126,7 +125,19 @@ export default function Graph() {
 
   return (
     <>
-      <PageHeader title="Skills Knowledge Graph" subtitle="Larger nodes are more central. Teal nodes are skills and amber nodes are roles." />
+      <PageHeader title="Skills Knowledge Graph" subtitle="How skills and roles connect across the organization. Larger nodes are more central.">
+        <ul className="flex gap-4 text-xs text-slate-600">
+          {[
+            ["Skill", CHART.skill],
+            ["Role", CHART.role],
+          ].map(([label, color]) => (
+            <li key={label} className="flex items-center gap-1.5">
+              <span aria-hidden className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+              {label}
+            </li>
+          ))}
+        </ul>
+      </PageHeader>
       <Async state={graph} isEmpty={(data) => data.nodes.length === 0} emptyText="The graph has no nodes yet.">
         {(data) => (
           <div className="grid gap-4 lg:grid-cols-[1fr_18rem]">

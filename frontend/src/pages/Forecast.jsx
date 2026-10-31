@@ -1,12 +1,12 @@
+import { Gauge, TrendingDown, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api.js";
 import { Async, Card, ErrorNotice, PageHeader, pct, Stat, TrendBadge } from "../components/layout/ui.jsx";
+import { CHART, TICK, TOOLTIP_STYLE } from "../components/shared/chartTheme.js";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
+import { percent } from "../components/shared/format.js";
 import { useApi } from "../hooks/useApi.js";
-
-// The readiness API already returns percentages, unlike the 0 to 1 fractions elsewhere.
-const percent = (value) => (value === null || value === undefined ? "-" : `${value.toFixed(1)}%`);
 
 function ReadinessTiles() {
   const readiness = useApi(() => api.readiness());
@@ -15,9 +15,9 @@ function ReadinessTiles() {
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Readiness now" value={percent(data?.now)} hint="Forecast demand covered by supply" />
-        <Stat label="In 4 quarters, no action" value={percent(data?.no_action)} hint="With 3% attrition per quarter" />
-        <Stat label="In 4 quarters, with plans" value={percent(data?.with_plans)} hint="If recommended plans complete" />
+        <Stat label="Readiness now" value={percent(data?.now)} hint="Forecast demand covered by supply" icon={Gauge} />
+        <Stat label="In 4 quarters, no action" value={percent(data?.no_action)} hint="With 3% attrition per quarter" icon={TrendingDown} />
+        <Stat label="In 4 quarters, with plans" value={percent(data?.with_plans)} hint="If recommended plans complete" icon={TrendingUp} />
       </div>
       <ExplanationPanel explanation={data?.explanation} />
     </>
@@ -36,13 +36,13 @@ function RisingSkills() {
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} layout="vertical" margin={{ left: 8, right: 16 }}>
-                  <CartesianGrid horizontal={false} stroke="#e2e8f0" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} unit="%" />
-                  <YAxis type="category" dataKey="name" width={130} tick={{ fontSize: 11 }} interval={0} />
-                  <Tooltip formatter={(value) => [`${value}%`, "Growth"]} />
-                  <Bar dataKey="growth_pct" radius={[0, 3, 3, 0]} isAnimationActive={false}>
+                  <CartesianGrid horizontal={false} stroke={CHART.grid} />
+                  <XAxis type="number" tick={TICK} unit="%" axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="name" width={160} tick={TICK} interval={0} axisLine={false} tickLine={false} />
+                  <Tooltip formatter={(value) => [`${value}%`, "Growth"]} contentStyle={TOOLTIP_STYLE} cursor={{ fill: "#f1f5f9" }} />
+                  <Bar dataKey="growth_pct" barSize={14} radius={[0, 4, 4, 0]} isAnimationActive={false}>
                     {data.map((item) => (
-                      <Cell key={item.skill_id} fill={item.growth_pct >= 0 ? "#0f766e" : "#b45309"} />
+                      <Cell key={item.skill_id} fill={item.growth_pct >= 0 ? CHART.accent : CHART.negative} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -50,7 +50,7 @@ function RisingSkills() {
             </div>
             <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
               {data.map((item) => (
-                <Link key={item.skill_id} to={`/forecast/${item.skill_id}`} className="text-teal-700 underline">
+                <Link key={item.skill_id} to={`/forecast/${item.skill_id}`} className="text-brand-700 underline">
                   {item.name}
                 </Link>
               ))}
@@ -137,7 +137,7 @@ function FutureGaps() {
       <Async state={gaps} isEmpty={(data) => data.length === 0} emptyText="No future gaps calculated yet.">
         {(data) => (
           <div className="max-h-72 overflow-auto">
-            <table className="w-full text-sm">
+            <table className="data-table w-full text-sm">
               <thead className="sticky top-0 bg-white text-left text-xs text-slate-500">
                 <tr>
                   <th scope="col" className="py-1 font-medium">
@@ -175,7 +175,7 @@ function FutureGaps() {
 export default function Forecast() {
   return (
     <>
-      <PageHeader title="Future Skills Forecast" subtitle="Local Ridge forecast of skill demand. All figures come from dummy data." />
+      <PageHeader title="Future Skills Forecast" subtitle="Local Ridge forecast of skill demand across the organization. All figures come from dummy data." />
       <ReadinessTiles />
       <div className="mt-4 grid gap-4 lg:grid-cols-[3fr_2fr]">
         <RisingSkills />

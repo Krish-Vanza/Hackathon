@@ -51,9 +51,12 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173`. Use **Demo role** at the top right to switch between HR and Employee.
+Open `http://localhost:5173`. Use the **HR / Employee** switch at the top right to change view.
 
-**Requirements Tour** in the sidebar walks through FR-01 to FR-10 one step at a time. Each step quotes the brief, proves the requirement with live API data, and links to the screen that delivers it.
+- **HR view** is the organization: overview, forecast, risk, HR review, reports, and an Employees directory covering all 60 people.
+- **Employee view** is personal: one person's profile, learning path, mobility and career paths. **Demo persona** chooses who is signed in. Organization pages are hidden, and typed URLs redirect.
+
+**Requirements Tour** in the HR sidebar walks through FR-01 to FR-10 one step at a time. Each step quotes the brief, proves the requirement with live API data, and links to the screen that delivers it.
 
 ## Data modes
 
@@ -92,19 +95,12 @@ With the backend running, run `python scripts/smoke.py` from the repo root to ca
 
 ## Demo in 5 minutes
 
-1. **`/forecast` as HR:** readiness, rising skills, the accuracy card and the market brief.
-2. **`/graph` and `/risk`:** open **Why?** on Agentic AI to show the single-expert dependency.
-3. **`/profile/E-0007` as Employee:** skills, gaps and the learning path with reasons.
-4. **`/mobility/E-0007` and `/career/E-0007`:** the ML Engineer match, shown as **Awaiting HR review**.
-5. **`/review` as HR:** approve the match and reject or change another, then show the Employee view and `/audit`.
-6. **`/report`:** print to PDF or download the CSV.
-
-Suggestions join the HR queue when their page is first opened, so open step 4 before step 5.
+See [docs/DEMO_STORY.md](docs/DEMO_STORY.md) for the presentation story, with the speaking points for each step.
 
 ## Limits
 
 - All accuracy figures come from dummy data.
-- The Demo role switch is not authentication.
+- The HR / Employee switch is not authentication. It sends `X-Demo-Role`, which anyone could set.
 - Candidate lists are decision support only. Nothing assigns or rejects anyone automatically.
 
 See [docs/TECHNICAL_DOCUMENTATION.md](docs/TECHNICAL_DOCUMENTATION.md) for details.

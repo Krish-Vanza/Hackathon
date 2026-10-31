@@ -1,13 +1,80 @@
+@import "@fontsource-variable/inter";
 @import "tailwindcss";
 
+/* `brand` follows the active view, so HR and Employee are easy to tell apart on screen. */
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-brand-50: var(--accent-50);
+  --color-brand-100: var(--accent-100);
+  --color-brand-200: var(--accent-200);
+  --color-brand-400: var(--accent-400);
+  --color-brand-600: var(--accent-600);
+  --color-brand-700: var(--accent-700);
+  --color-brand-800: var(--accent-800);
+  --color-brand-900: var(--accent-900);
+}
+
+:root,
+[data-view="hr"] {
+  --accent-50: #eef2ff;
+  --accent-100: #e0e7ff;
+  --accent-200: #c7d2fe;
+  --accent-400: #818cf8;
+  --accent-600: #4f46e5;
+  --accent-700: #4338ca;
+  --accent-800: #3730a3;
+  --accent-900: #312e81;
+}
+
+[data-view="employee"] {
+  --accent-50: #f0fdfa;
+  --accent-100: #ccfbf1;
+  --accent-200: #99f6e4;
+  --accent-400: #2dd4bf;
+  --accent-600: #0d9488;
+  --accent-700: #0f766e;
+  --accent-800: #115e59;
+  --accent-900: #134e4a;
+}
+
 body {
-  background: #f8fafc;
+  background: #f5f6f8;
   color: #0f172a;
+  font-feature-settings: "cv11", "ss03";
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-600);
+  outline-offset: 2px;
 }
 
 .recharts-surface:focus,
 .recharts-wrapper:focus {
   outline: none;
+}
+
+.data-table thead th {
+  border-bottom: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.5rem;
+  text-transform: uppercase;
+}
+
+.data-table tbody tr:hover > td {
+  background: #f8fafc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
 /* Print-to-PDF for /report: drop the app frame and keep sections whole. */
@@ -33,5 +100,9 @@ body {
   section,
   tr {
     break-inside: avoid;
+  }
+
+  section {
+    box-shadow: none !important;
   }
 }

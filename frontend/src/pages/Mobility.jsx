@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { api } from "../api.js";
 import { useRole } from "../components/layout/RoleContext.jsx";
-import { Async, Card, PageHeader, pct } from "../components/layout/ui.jsx";
+import { Async, Card, fieldClass, PageHeader, pct } from "../components/layout/ui.jsx";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
 import StatusBadge from "../components/shared/StatusBadge.jsx";
 import { useApi } from "../hooks/useApi.js";
@@ -12,7 +12,7 @@ function RoleCard({ role }) {
     <Card>
       <div className="flex items-start justify-between gap-2">
         <h2 className="font-semibold">{role.role_title}</h2>
-        <span className="text-xl font-semibold tabular-nums text-teal-700">{pct(role.readiness)}</span>
+        <span className="text-xl font-semibold tabular-nums text-brand-700">{pct(role.readiness)}</span>
       </div>
       <div className="mt-2">
         <StatusBadge status={role.review_status} />
@@ -51,7 +51,7 @@ function Candidates({ roles }) {
           aria-label="Target role"
           value={roleId}
           onChange={(event) => setRoleId(event.target.value)}
-          className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm"
+          className={fieldClass}
         >
           {roles.map((role) => (
             <option key={role.role_id} value={role.role_id}>
@@ -67,7 +67,7 @@ function Candidates({ roles }) {
       <Async state={candidates} isEmpty={(data) => data.candidates.length === 0} emptyText="No candidates for this role.">
         {(data) => (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="data-table w-full text-sm">
               <thead className="text-left text-xs text-slate-500">
                 <tr>
                   <th scope="col" className="py-1 font-medium">
@@ -88,7 +88,7 @@ function Candidates({ roles }) {
                 {data.candidates.map((candidate) => (
                   <tr key={candidate.employee_id} className="border-t border-slate-100">
                     <td className="py-1.5">
-                      <Link to={`/profile/${candidate.employee_id}`} className="text-teal-700 underline">
+                      <Link to={`/profile/${candidate.employee_id}`} className="text-brand-700 underline">
                         {candidate.employee_id}
                       </Link>
                     </td>
@@ -120,7 +120,10 @@ export default function Mobility() {
 
   return (
     <>
-      <PageHeader title={`Internal Mobility: ${id}`} subtitle="Best-fit roles by skill readiness. Every match needs HR review." />
+      <PageHeader
+        title={role === "hr" ? `Internal Mobility: ${id}` : "Internal Mobility"}
+        subtitle={role === "hr" ? "Best-fit roles by skill readiness. Every match needs HR review." : "Open roles that fit your skills. HR reviews every match before it moves forward."}
+      />
       {role === "hr" && (
         <div role="tablist" aria-label="Mobility views" className="mb-4 flex gap-1 border-b border-slate-200">
           {TABS.map(([value, label]) => (
@@ -129,7 +132,7 @@ export default function Mobility() {
               role="tab"
               aria-selected={tab === value}
               onClick={() => setSelectedTab(value)}
-              className={`-mb-px border-b-2 px-3 py-2 text-sm ${tab === value ? "border-teal-700 font-medium text-teal-800" : "border-transparent text-slate-600"}`}
+              className={`-mb-px border-b-2 px-3 py-2 text-sm ${tab === value ? "border-brand-700 font-medium text-brand-800" : "border-transparent text-slate-600"}`}
             >
               {label}
             </button>

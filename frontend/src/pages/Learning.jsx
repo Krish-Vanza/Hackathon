@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { api } from "../api.js";
+import { useRole } from "../components/layout/RoleContext.jsx";
 import { Async, Card, PageHeader } from "../components/layout/ui.jsx";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
 import StatusBadge from "../components/shared/StatusBadge.jsx";
@@ -7,11 +8,12 @@ import { useApi } from "../hooks/useApi.js";
 
 export default function Learning() {
   const { id } = useParams();
+  const { role } = useRole();
   const learning = useApi(() => api.learning(id), [id]);
 
   return (
     <>
-      <PageHeader title={`Learning Path: ${id}`} subtitle="Courses in the order to take them, with prerequisites first." />
+      <PageHeader title={role === "hr" ? `Learning Path: ${id}` : "My Learning Path"} subtitle="Courses in the order to take them, with prerequisites first." />
       <Async
         state={learning}
         isEmpty={(data) => data.courses.length === 0}
@@ -26,7 +28,7 @@ export default function Learning() {
               {data.courses.map((course, index) => (
                 <li key={course.course_id} className="relative flex gap-4 pb-5 last:pb-0">
                   {index < data.courses.length - 1 && <span aria-hidden className="absolute top-7 bottom-0 left-3.5 w-px bg-slate-200" />}
-                  <span className="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-700 text-xs font-semibold text-white">
+                  <span className="z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand-700 text-xs font-semibold text-white">
                     {index + 1}
                   </span>
                   <div className="min-w-0">
