@@ -1,6 +1,5 @@
-// Dummy responses for `npm run dev:mock`, written from plan.md sections 4, 5 and 8.
-// These shapes are what the pages read, so they double as the proposed contract for the real API.
-// Fractions (readiness, confidence, win_rate) are 0 to 1. growth_pct and *_mape are percentages.
+// Dummy responses for `npm run dev:mock`. Shapes mirror the FastAPI backend, which is the source of truth.
+// Fractions (role readiness, confidence, win_rate, growth) are 0 to 1. /api/readiness and *_mape are percentages.
 
 const SKILLS = [
   ["SK-001", "Python", "Programming", 0.8, 3],
@@ -57,6 +56,7 @@ const COURSES = [
 }));
 
 const flaggedForecasts = new Set();
+const PENDING_REVIEW = { review_status: "pending", review_label: "Awaiting HR review", review_comment: "" };
 
 const explanation = (summary, factors, confidence, method, source = "rules") => ({
   summary,
@@ -106,29 +106,24 @@ function gapsFor(employee, roleId) {
 
 function profile(employeeId) {
   const employee = findEmployee(employeeId);
-  const required = ROLES[employee.role_id].required;
-  const skillIds = [...new Set([...Object.keys(employee.levels), ...Object.keys(required)])];
   return {
     employee_id: employee.employee_id,
     role_id: employee.role_id,
     role_title: ROLES[employee.role_id].title,
     department: employee.department,
-    skills: skillIds.map((skillId) => {
+    skills: Object.entries(employee.levels).map(([skillId, level]) => {
       const skill = skillById(skillId);
-      const level = employee.levels[skillId] ?? 0;
       return {
         skill_id: skillId,
         name: skill.name,
         category: skill.category,
         effective_level: level,
-        required_level: required[skillId] ?? 0,
-        evidence: level
-          ? [
-              { source: "manager", level: Math.min(5, level + 0.2), date: "2026-06-12" },
-              { source: "project", level, date: "2026-02-03" },
-              { source: "self", level: Math.min(5, level + 0.5), date: "2024-09-20" },
-            ]
-          : [],
+        evidence_strength: 0.8,
+        evidence: [
+          { source: "manager", level: Math.min(5, level + 0.2), date: "2026-06-12" },
+          { source: "project", level, date: "2026-02-03" },
+          { source: "self", level: Math.min(5, level + 0.5), date: "2024-09-20" },
+        ],
       };
     }),
     explanation: explanation(
@@ -205,7 +200,7 @@ function extractSkills(text) {
     const confidence = index % 3 === 2 ? 0.62 : 0.91;
     return { skill_id: skill.skill_id, name: skill.name, confidence, needs_review: confidence < 0.7 };
   });
-  return { matches, source: "template" };
+  return { matches, explanation: explanation(`Found ${matches.length} known skills in the text.`, [], 0.75, "Skill extraction", "template") };
 }
 
 // Index 0 is 2021 Q4 and index 19 is 2026 Q3, matching the plan's 20 quarters.
@@ -219,16 +214,20 @@ function forecastFor(skill) {
   const base = 30 + (skill.skill_id.charCodeAt(5) % 7) * 8;
   const demandAt = (index) => round(base * (1 + quarterly) ** index * (1 + Math.sin(index * 1.7) * 0.015));
   const history = Array.from({ length: 20 }, (_, index) => ({ quarter: quarterLabel(index), demand_fte: demandAt(index) }));
-  const forecast = Array.from({ length: 4 }, (_, offset) => ({ quarter: quarterLabel(20 + offset), demand_fte: demandAt(20 + offset) }));
+  const forecast = Array.from({ length: 4 }, (_, offset) => demandAt(20 + offset));
   return {
     skill_id: skill.skill_id,
     name: skill.name,
-    history,
-    forecast,
-    low: forecast.map((point, offset) => round(point.demand_fte * (1 - 0.03 * (offset + 1)))),
-    high: forecast.map((point, offset) => round(point.demand_fte * (1 + 0.03 * (offset + 1)))),
+    current_demand: history.at(-1).demand_fte,
+    forecast_demand: forecast.at(-1),
+    growth: skill.growth_pct / 100,
     trend_status: trendStatus(skill.growth_pct),
-    review_status: flaggedForecasts.has(skill.skill_id) ? "pending" : null,
+    history,
+    quarters: forecast.map((_, offset) => quarterLabel(20 + offset)),
+    forecast,
+    low: forecast.map((value, offset) => round(value * (1 - 0.03 * (offset + 1)))),
+    high: forecast.map((value, offset) => round(value * (1 + 0.03 * (offset + 1)))),
+    flag: flaggedForecasts.has(skill.skill_id) ? { review_id: `RV-${skill.skill_id}`, ...PENDING_REVIEW } : null,
     explanation: explanation(
       `${skill.name} demand is forecast to ${skill.growth_pct >= 0 ? "grow" : "fall"} about ${Math.abs(skill.growth_pct)}% over four quarters.`,
       [
@@ -248,24 +247,23 @@ function risingSkills(top) {
     .sort((a, b) => b.growth_pct - a.growth_pct)
     .slice(0, top)
     .map((skill) => {
-      const item = forecastFor(skill);
-      return {
-        skill_id: skill.skill_id,
-        name: skill.name,
-        current: item.history.at(-1).demand_fte,
-        forecast_end: item.forecast.at(-1).demand_fte,
-        growth_pct: skill.growth_pct,
-        trend_status: item.trend_status,
-      };
+      const { skill_id, name, current_demand, forecast_demand, growth, trend_status } = forecastFor(skill);
+      return { skill_id, name, current_demand, forecast_demand, growth, trend_status };
     });
 }
 
 function forecastGaps() {
   return SKILLS.map((skill) => {
     const item = forecastFor(skill);
-    const demand = item.forecast.at(-1).demand_fte;
-    const supply = round(item.history.at(-1).demand_fte * 0.885);
-    return { skill_id: skill.skill_id, name: skill.name, forecast_demand: demand, projected_supply: supply, future_gap: round(demand - supply) };
+    const supply = round(item.current_demand * 0.885);
+    return {
+      skill_id: skill.skill_id,
+      name: skill.name,
+      current_demand: item.current_demand,
+      forecast_demand: item.forecast_demand,
+      projected_supply: supply,
+      future_gap: round(item.forecast_demand - supply),
+    };
   }).sort((a, b) => b.future_gap - a.future_gap);
 }
 
@@ -273,17 +271,21 @@ function learning(employeeId) {
   const employee = findEmployee(employeeId);
   const targetRole = employee.employee_id === "E-0007" ? "R-ML" : employee.role_id;
   const gapIds = new Set(gapsFor(employee, targetRole).map((gap) => gap.skill_id));
-  const plan = COURSES.filter((course) => course.skills_taught.some((skillId) => gapIds.has(skillId))).map((course) => {
-    const closes = course.skills_taught.filter((skillId) => gapIds.has(skillId)).map((skillId) => skillById(skillId).name);
-    return { ...course, closes, score: 0.81, reason: `Closes your ${closes.join(" and ")} gap, and forecast demand for it is rising.`, source: "template" };
+  const courses = COURSES.filter((course) => course.skills_taught.some((skillId) => gapIds.has(skillId))).map((course) => {
+    const closes = course.skills_taught.filter((skillId) => gapIds.has(skillId));
+    const names = closes.map((skillId) => skillById(skillId).name).join(" and ");
+    return { ...course, score: 0.81, closes_gaps: closes, reason: `Closes your ${names} gap, and forecast demand for it is rising.` };
   });
-  const totalHours = plan.reduce((sum, course) => sum + course.hours, 0);
+  const totalHours = courses.reduce((sum, course) => sum + course.hours, 0);
   return {
     employee_id: employeeId,
-    plan,
+    role_id: targetRole,
+    role_title: ROLES[targetRole].title,
+    courses,
     total_hours: totalHours,
-    weeks: Math.ceil(totalHours / 6),
-    review_status: "pending",
+    weeks: round(totalHours / 6),
+    hidden: false,
+    ...PENDING_REVIEW,
     explanation: explanation(
       "Courses rank by gap coverage, future demand and level fit, then follow prerequisite order.",
       [
@@ -297,23 +299,32 @@ function learning(employeeId) {
   };
 }
 
+function missingSkills(employee, roleId) {
+  return gapsFor(employee, roleId).map(({ skill_id, name, required, effective }) => {
+    const course = COURSES.find((item) => item.skills_taught.includes(skill_id));
+    return { skill_id, name, current: effective, required, course_id: course?.course_id ?? null, course_title: course?.title ?? null, hours: course?.hours ?? 0 };
+  });
+}
+
+function matchFor(employee, roleId) {
+  const missing = missingSkills(employee, roleId);
+  const hours = missing.reduce((sum, skill) => sum + skill.hours, 0);
+  return { role_id: roleId, role_title: ROLES[roleId].title, readiness: roleReadiness(employee, roleId), missing_skills: missing, bridge_hours: hours, bridge_weeks: round(hours / 6) };
+}
+
 function mobility(employeeId) {
   const employee = findEmployee(employeeId);
-  const roles = Object.keys(ROLES)
+  const matches = Object.keys(ROLES)
     .filter((roleId) => roleId !== employee.role_id)
     .map((roleId) => {
-      const missing = gapsFor(employee, roleId);
-      const readiness = roleReadiness(employee, roleId);
+      const match = matchFor(employee, roleId);
+      const { readiness, missing_skills: missing } = match;
       return {
-        role_id: roleId,
-        title: ROLES[roleId].title,
-        readiness,
-        missing_skills: missing.map(({ skill_id, name, required, effective }) => ({ skill_id, name, required, effective })),
-        bridge_weeks: Math.ceil((missing.length * 16) / 6),
-        status: "pending",
+        ...match,
+        ...PENDING_REVIEW,
         explanation: explanation(
           `${Math.round(readiness * 100)}% of the criticality-weighted skill levels for ${ROLES[roleId].title} are met.`,
-          missing.slice(0, 3).map((gap) => [gap.name, `level ${gap.effective} of ${gap.required}`, 0.3, "down"]),
+          missing.slice(0, 3).map((gap) => [gap.name, `${gap.current} of ${gap.required} required`, 0.3]),
           0.8,
           "Role readiness",
         ),
@@ -321,43 +332,31 @@ function mobility(employeeId) {
     })
     .sort((a, b) => b.readiness - a.readiness)
     .slice(0, 3);
-  return { employee_id: employeeId, roles };
+  return { employee_id: employeeId, matches, decision_support: true };
 }
 
 function roleCandidates(roleId, role) {
   if (role !== "hr") throw new MockError(403, "HR role required");
   if (!ROLES[roleId]) throw new MockError(404, `Role ${roleId} not found`);
   const candidates = EMPLOYEES.filter((employee) => employee.role_id !== roleId)
-    .map((employee) => ({
-      employee_id: employee.employee_id,
-      department: employee.department,
-      readiness: roleReadiness(employee, roleId),
-      missing_count: gapsFor(employee, roleId).length,
-    }))
+    .map((employee) => ({ ...matchFor(employee, roleId), employee_id: employee.employee_id, department: employee.department }))
     .sort((a, b) => b.readiness - a.readiness);
-  return { role_id: roleId, title: ROLES[roleId].title, candidates };
+  return { role_id: roleId, role_title: ROLES[roleId].title, candidates };
 }
 
 function career(employeeId) {
   const employee = findEmployee(employeeId);
-  const step = (roleId, weeks) => ({
-    role_id: roleId,
-    title: ROLES[roleId].title,
-    weeks,
-    skills: gapsFor(employee, roleId).map((gap) => gap.name),
-    courses: COURSES.filter((course) => course.skills_taught.some((skillId) => ROLES[roleId].required[skillId]))
-      .slice(0, 2)
-      .map((course) => course.title),
-  });
+  const step = (roleId, weeks) => ({ role_id: roleId, role_title: ROLES[roleId].title, missing_skills: missingSkills(employee, roleId), weeks });
   return {
     employee_id: employeeId,
+    current_role_id: employee.role_id,
     paths: [
       {
-        path_id: "P-1",
-        title: "Machine learning track",
+        target_role_id: "R-AI",
+        target_title: ROLES["R-AI"].title,
         steps: [step("R-ML", 12), step("R-AI", 26)],
         total_weeks: 38,
-        status: "pending",
+        ...PENDING_REVIEW,
         explanation: explanation(
           "The shortest path by skill distance on the role graph.",
           [
@@ -369,22 +368,21 @@ function career(employeeId) {
         ),
       },
       {
-        path_id: "P-2",
-        title: "Data track",
+        target_role_id: "R-DE",
+        target_title: ROLES["R-DE"].title,
         steps: [step("R-DE", 16)],
         total_weeks: 16,
-        status: "pending",
+        ...PENDING_REVIEW,
         explanation: explanation("A single move that reuses SQL and Python strengths.", [["Skill distance", "1 role move", 0.7]], 0.71, "Role graph shortest path"),
       },
     ],
   };
 }
 
-const marketBrief = () => ({
-  summary: "Agentic AI (SK-007) leads demand growth, followed by Prompt Engineering (SK-008) and MLOps (SK-006). Manual Testing (SK-011) continues to decline.",
-  cited_skill_ids: ["SK-007", "SK-008", "SK-006", "SK-011"],
-  source: "template",
-});
+function marketBrief() {
+  const brief = "Agentic AI (SK-007) leads demand growth, followed by Prompt Engineering (SK-008) and MLOps (SK-006). Manual Testing (SK-011) continues to decline.";
+  return { brief, skills: [], explanation: explanation(brief, [["Agentic AI", "+26% over four quarters", 1]], 0.7, "Summary of stored forecasts", "template") };
+}
 
 const routes = [
   ["GET", /^\/api\/me$/, (_, __, { role }) => ({ role })],
@@ -395,10 +393,17 @@ const routes = [
   ["GET", /^\/api\/gaps\/org$/, orgGaps],
   ["GET", /^\/api\/graph$/, (_, query) => graph(query.get("focus"))],
   ["POST", /^\/api\/skills\/extract$/, (_, __, { body }) => extractSkills(body?.text)],
-  ["GET", /^\/api\/market\/trends$/, () => SKILLS.map(({ skill_id, name, growth_pct }) => ({ skill_id, name, growth_pct, trend_status: trendStatus(growth_pct) }))],
+  [
+    "GET",
+    /^\/api\/market\/trends$/,
+    () =>
+      [...SKILLS]
+        .sort((a, b) => b.growth_pct - a.growth_pct)
+        .map(({ skill_id, name, category, growth_pct }) => ({ skill_id, name, category, yoy_growth: growth_pct / 100, status: trendStatus(growth_pct) })),
+  ],
   ["GET", /^\/api\/market\/brief$/, marketBrief],
   ["GET", /^\/api\/forecast\/skills$/, (_, query) => risingSkills(Number(query.get("top")) || 10)],
-  ["GET", /^\/api\/forecast\/accuracy$/, () => ({ version: "mock-1", trained_at: "2026-10-31T09:00:00Z", model_mape: 6.4, naive_mape: 9.8, win_rate: 0.75 })],
+  ["GET", /^\/api\/forecast\/accuracy$/, () => ({ version: "mock-1", trained_at: "2026-10-31T09:00:00Z", model_mape: 6.4, naive_mape: 9.8, win_rate: 0.75, available: true, beats_naive: true, note: "Backtest on dummy data, not real workforce data." })],
   ["GET", /^\/api\/forecast\/gaps$/, forecastGaps],
   [
     "GET",
@@ -414,10 +419,10 @@ const routes = [
     /^\/api\/forecast\/skills\/([^/]+)\/flag$/,
     ([skillId]) => {
       flaggedForecasts.add(skillId);
-      return { review_id: `RV-${skillId}`, status: "pending" };
+      return { review_id: `RV-${skillId}`, ...PENDING_REVIEW };
     },
   ],
-  ["GET", /^\/api\/readiness$/, () => ({ now: 0.74, no_action: 0.61, with_plans: 0.79 })],
+  ["GET", /^\/api\/readiness$/, () => ({ now: 74.2, no_action: 61.3, with_plans: 79.1 })],
   ["GET", /^\/api\/courses$/, () => COURSES],
   ["GET", /^\/api\/learning\/([^/]+)$/, ([employeeId]) => learning(employeeId)],
   ["GET", /^\/api\/mobility\/roles\/([^/]+)\/candidates$/, ([roleId], _, { role }) => roleCandidates(roleId, role)],

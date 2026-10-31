@@ -11,12 +11,13 @@ function RoleCard({ role }) {
   return (
     <Card>
       <div className="flex items-start justify-between gap-2">
-        <h2 className="font-semibold">{role.title}</h2>
+        <h2 className="font-semibold">{role.role_title}</h2>
         <span className="text-xl font-semibold tabular-nums text-teal-700">{pct(role.readiness)}</span>
       </div>
       <div className="mt-2">
-        <StatusBadge status={role.status} />
+        <StatusBadge status={role.review_status} />
       </div>
+      {role.review_comment && <p className="mt-2 text-sm text-slate-600">HR comment: {role.review_comment}</p>}
       <p className="mt-3 text-xs font-medium text-slate-500">Missing skills</p>
       {role.missing_skills.length ? (
         <ul className="mt-1 space-y-0.5 text-sm">
@@ -24,7 +25,7 @@ function RoleCard({ role }) {
             <li key={skill.skill_id} className="flex justify-between gap-3">
               <span>{skill.name}</span>
               <span className="tabular-nums text-slate-500">
-                {skill.effective.toFixed(1)} of {skill.required}
+                {skill.current.toFixed(1)} of {skill.required}
               </span>
             </li>
           ))}
@@ -54,7 +55,7 @@ function Candidates({ roles }) {
         >
           {roles.map((role) => (
             <option key={role.role_id} value={role.role_id}>
-              {role.title}
+              {role.role_title}
             </option>
           ))}
         </select>
@@ -93,7 +94,7 @@ function Candidates({ roles }) {
                     </td>
                     <td>{candidate.department}</td>
                     <td className="text-right tabular-nums">{pct(candidate.readiness)}</td>
-                    <td className="text-right tabular-nums">{candidate.missing_count}</td>
+                    <td className="text-right tabular-nums">{candidate.missing_skills.length}</td>
                   </tr>
                 ))}
               </tbody>
@@ -135,16 +136,16 @@ export default function Mobility() {
           ))}
         </div>
       )}
-      <Async state={mobility} isEmpty={(data) => data.roles.length === 0} emptyText="No role matches to show.">
+      <Async state={mobility} isEmpty={(data) => data.matches.length === 0} emptyText="No role matches to show.">
         {(data) =>
           tab === "roles" ? (
             <div className="grid items-start gap-4 lg:grid-cols-3">
-              {data.roles.map((item) => (
+              {data.matches.map((item) => (
                 <RoleCard key={item.role_id} role={item} />
               ))}
             </div>
           ) : (
-            <Candidates roles={data.roles} />
+            <Candidates roles={data.matches} />
           )
         }
       </Async>

@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Legend, PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
+import { PolarAngleAxis, PolarGrid, PolarRadiusAxis, Radar, RadarChart, ResponsiveContainer, Tooltip } from "recharts";
 import { api } from "../api.js";
 import { Async, Card, ErrorNotice, PageHeader, pct } from "../components/layout/ui.jsx";
 import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
 import { useApi } from "../hooks/useApi.js";
 
 function SkillRadar({ skills }) {
-  const data = skills.map((skill) => ({ skill: skill.name, Current: skill.effective_level, Required: skill.required_level }));
+  const data = skills.map((skill) => ({ skill: skill.name, Current: skill.effective_level }));
   return (
     <div className="h-80">
       <ResponsiveContainer width="100%" height="100%">
@@ -15,9 +15,7 @@ function SkillRadar({ skills }) {
           <PolarGrid stroke="#e2e8f0" />
           <PolarAngleAxis dataKey="skill" tick={{ fontSize: 11, fill: "#475569" }} />
           <PolarRadiusAxis domain={[0, 5]} tickCount={6} tick={{ fontSize: 10 }} />
-          <Radar dataKey="Required" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.15} isAnimationActive={false} />
           <Radar dataKey="Current" stroke="#0f766e" fill="#0f766e" fillOpacity={0.35} isAnimationActive={false} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
           <Tooltip />
         </RadarChart>
       </ResponsiveContainer>
@@ -149,7 +147,7 @@ export default function Profile() {
               </Link>
             </PageHeader>
             <div className="grid gap-4 lg:grid-cols-2">
-              <Card title="Current versus required level (0-5)">
+              <Card title="Current skill levels (0-5)">
                 <SkillRadar skills={data.skills} />
               </Card>
               <Card title="Evidence">

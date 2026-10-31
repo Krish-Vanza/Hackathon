@@ -11,8 +11,8 @@ function chartRows(data) {
   const rows = data.history.map((point) => ({ quarter: point.quarter, history: point.demand_fte }));
   // Start the forecast line at the last actual so the two lines join.
   rows[rows.length - 1].forecast = data.history.at(-1).demand_fte;
-  data.forecast.forEach((point, index) => {
-    rows.push({ quarter: point.quarter, forecast: point.demand_fte, range: [data.low[index], data.high[index]] });
+  data.forecast.forEach((value, index) => {
+    rows.push({ quarter: data.quarters[index], forecast: value, range: [data.low[index], data.high[index]] });
   });
   return rows;
 }
@@ -31,7 +31,7 @@ function FlagButton({ skillId, status, onFlagged }) {
     setBusy(true);
     setError(null);
     try {
-      await api.flagForecast(skillId);
+      await api.flagForecast(skillId, "Flagged for review from the Skill Forecast page");
       onFlagged();
     } catch (failure) {
       setError(failure);
@@ -69,7 +69,7 @@ export default function SkillForecast() {
             <PageHeader title={data.name} subtitle={`${data.skill_id} · demand in FTE, dummy data`}>
               <div className="flex items-center gap-3">
                 <TrendBadge status={data.trend_status} />
-                <FlagButton skillId={data.skill_id} status={data.review_status} onFlagged={forecast.reload} />
+                <FlagButton skillId={data.skill_id} status={data.flag?.review_status} onFlagged={forecast.reload} />
               </div>
             </PageHeader>
             <Card title="Demand history and 4-quarter forecast, with 80% range">
@@ -77,7 +77,7 @@ export default function SkillForecast() {
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={chartRows(data)} margin={{ right: 16 }}>
                     <CartesianGrid vertical={false} stroke="#e2e8f0" />
-                    <XAxis dataKey="quarter" tick={{ fontSize: 11 }} interval={3} />
+                    <XAxis dataKey="quarter" tick={{ fontSize: 11 }} interval="preserveStartEnd" minTickGap={32} />
                     <YAxis tick={{ fontSize: 11 }} width={40} domain={["auto", "auto"]} />
                     <Tooltip formatter={formatTooltip} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />

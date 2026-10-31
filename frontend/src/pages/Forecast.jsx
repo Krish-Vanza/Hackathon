@@ -2,18 +2,25 @@ import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { api } from "../api.js";
 import { Async, Card, ErrorNotice, PageHeader, pct, Stat, TrendBadge } from "../components/layout/ui.jsx";
+import ExplanationPanel from "../components/shared/ExplanationPanel.jsx";
 import { useApi } from "../hooks/useApi.js";
+
+// The readiness API already returns percentages, unlike the 0 to 1 fractions elsewhere.
+const percent = (value) => (value === null || value === undefined ? "-" : `${value.toFixed(1)}%`);
 
 function ReadinessTiles() {
   const readiness = useApi(() => api.readiness());
   if (readiness.error) return <ErrorNotice error={readiness.error} onRetry={readiness.reload} />;
   const data = readiness.data;
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
-      <Stat label="Readiness now" value={pct(data?.now)} hint="Forecast demand covered by supply" />
-      <Stat label="In 4 quarters, no action" value={pct(data?.no_action)} hint="With 3% attrition per quarter" />
-      <Stat label="In 4 quarters, with plans" value={pct(data?.with_plans)} hint="If recommended plans complete" />
-    </div>
+    <>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Readiness now" value={percent(data?.now)} hint="Forecast demand covered by supply" />
+        <Stat label="In 4 quarters, no action" value={percent(data?.no_action)} hint="With 3% attrition per quarter" />
+        <Stat label="In 4 quarters, with plans" value={percent(data?.with_plans)} hint="If recommended plans complete" />
+      </div>
+      <ExplanationPanel explanation={data?.explanation} />
+    </>
   );
 }
 
@@ -22,7 +29,9 @@ function RisingSkills() {
   return (
     <Card title="Biggest rising skills (4-quarter growth, %)">
       <Async state={rising} isEmpty={(data) => data.length === 0} emptyText="No forecasts stored yet.">
-        {(data) => (
+        {(rows) => {
+          const data = rows.map((item) => ({ ...item, growth_pct: Math.round(item.growth * 100) }));
+          return (
           <>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -47,7 +56,8 @@ function RisingSkills() {
               ))}
             </div>
           </>
-        )}
+          );
+        }}
       </Async>
     </Card>
   );
@@ -57,7 +67,7 @@ function AccuracyCard() {
   const accuracy = useApi(() => api.forecastAccuracy());
   return (
     <Card title="Forecast accuracy (backtest)">
-      <Async state={accuracy}>
+      <Async state={accuracy} isEmpty={(data) => !data.available} emptyText="The forecast model has not been trained yet.">
         {(data) => (
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
@@ -69,7 +79,7 @@ function AccuracyCard() {
               <dd className="text-xl font-semibold tabular-nums">{data.naive_mape.toFixed(1)}%</dd>
             </div>
             <p className="col-span-2 text-slate-600">
-              The model beat the naive forecast on {pct(data.win_rate)} of backtests. Version {data.version}. Measured on dummy data.
+              The model beat the naive forecast on {pct(data.win_rate)} of backtests. Version {data.version}. {data.note}
             </p>
           </dl>
         )}
@@ -85,10 +95,8 @@ function MarketBrief() {
       <Async state={brief}>
         {(data) => (
           <>
-            <p className="text-sm leading-6 text-slate-700">{data.summary}</p>
-            <p className="mt-2 text-xs text-slate-500">
-              {data.source === "gemini" ? "Written by Gemini from stored data" : "Template text, Gemini not used"}
-            </p>
+            <p className="text-sm leading-6 text-slate-700">{data.brief}</p>
+            <ExplanationPanel explanation={data.explanation} />
           </>
         )}
       </Async>
@@ -103,20 +111,18 @@ function MarketTrends() {
       <Async state={trends} isEmpty={(data) => data.length === 0} emptyText="No market signals yet.">
         {(data) => (
           <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto text-sm">
-            {[...data]
-              .sort((a, b) => b.growth_pct - a.growth_pct)
-              .map((item) => (
-                <li key={item.skill_id} className="flex items-center justify-between gap-3 py-1.5">
-                  <span>{item.name}</span>
-                  <span className="flex items-center gap-2">
-                    <span className="tabular-nums text-slate-600">
-                      {item.growth_pct > 0 ? "+" : ""}
-                      {item.growth_pct}%
-                    </span>
-                    <TrendBadge status={item.trend_status} />
+            {data.map((item) => (
+              <li key={item.skill_id} className="flex items-center justify-between gap-3 py-1.5">
+                <span>{item.name}</span>
+                <span className="flex items-center gap-2">
+                  <span className="tabular-nums text-slate-600">
+                    {item.yoy_growth > 0 ? "+" : ""}
+                    {pct(item.yoy_growth)}
                   </span>
-                </li>
-              ))}
+                  <TrendBadge status={item.status} />
+                </span>
+              </li>
+            ))}
           </ul>
         )}
       </Async>

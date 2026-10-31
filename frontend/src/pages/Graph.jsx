@@ -96,7 +96,10 @@ function SidePanel({ data, selectedId, focus, onFocus }) {
           const outgoing = edge.source === node.id;
           return (
             <li key={`${edge.source}-${edge.target}-${edge.type}`} className="text-slate-700">
-              <span className="text-slate-500">{outgoing ? EDGE_LABELS[edge.type] : `${EDGE_LABELS[edge.type]} (from)`}:</span>{" "}
+              <span className="text-slate-500">
+                {EDGE_LABELS[edge.type] ?? edge.type}
+                {outgoing ? "" : " (from)"}:
+              </span>{" "}
               {labelOf(outgoing ? edge.target : edge.source)}
             </li>
           );

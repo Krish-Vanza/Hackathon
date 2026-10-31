@@ -6,16 +6,17 @@ import StatusBadge from "../components/shared/StatusBadge.jsx";
 import { useApi } from "../hooks/useApi.js";
 
 function Step({ step, index }) {
+  const courses = [...new Set(step.missing_skills.map((skill) => skill.course_title).filter(Boolean))];
   return (
     <li className="min-w-0 flex-1 rounded-lg border border-slate-200 p-3">
       <p className="text-xs font-medium text-slate-500">
         Step {index + 1} · about {step.weeks} weeks
       </p>
-      <p className="font-medium">{step.title}</p>
+      <p className="font-medium">{step.role_title}</p>
       <p className="mt-2 text-xs font-medium text-slate-500">Skills to build</p>
-      <p className="text-sm text-slate-700">{step.skills.join(", ") || "None"}</p>
+      <p className="text-sm text-slate-700">{step.missing_skills.map((skill) => skill.name).join(", ") || "None"}</p>
       <p className="mt-2 text-xs font-medium text-slate-500">Courses</p>
-      <p className="text-sm text-slate-700">{step.courses.join(", ") || "None"}</p>
+      <p className="text-sm text-slate-700">{courses.join(", ") || "None"}</p>
     </li>
   );
 }
@@ -31,7 +32,11 @@ export default function Career() {
         {(data) => (
           <div className="space-y-4">
             {data.paths.map((path) => (
-              <Card key={path.path_id} title={`${path.title} · about ${path.total_weeks} weeks`} action={<StatusBadge status={path.status} />}>
+              <Card
+                key={path.target_role_id}
+                title={`${path.target_title} · about ${path.total_weeks} weeks`}
+                action={<StatusBadge status={path.review_status} />}
+              >
                 <ol className="flex flex-col gap-3 md:flex-row">
                   {path.steps.map((step, index) => (
                     <Step key={step.role_id} step={step} index={index} />
