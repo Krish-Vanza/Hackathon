@@ -10,6 +10,9 @@ credentials.json
 secrets.json
 service-account*.json
 
+# Hackathon brief (marked Internal)
+/Use Cases*.docx
+
 # Claude Code local settings
 .claude/settings.local.json
 
