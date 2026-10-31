@@ -19,7 +19,7 @@ export default function Learning() {
       >
         {(data) => (
           <Card
-            title={`Towards ${data.role_title}: ${data.courses.length} courses · ${data.total_hours} hours · about ${data.weeks} weeks at 6 hours a week`}
+            title={`Towards ${data.role_title}: ${data.courses.length} ${data.courses.length === 1 ? "course" : "courses"} · ${data.total_hours} hours · about ${data.weeks} weeks at 6 hours a week`}
             action={<StatusBadge status={data.review_status} />}
           >
             <ol className="mt-2">
