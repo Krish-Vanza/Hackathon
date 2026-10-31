@@ -79,12 +79,16 @@ def _roles():
     ]
 
 
+# Demand is compared with headcount, so it must stay on the scale of the 60 seeded employees.
+DEMAND_SCALE = 0.06
+
+
 def _courses():
     return [
         {
             "course_id": cid,
             "title": title,
-            "skills_taught": [{"skill_id": s, "to_level": lvl} for s, lvl in taught],
+            "skills_taught": [s for s, _ in taught],
             "level": max(lvl for _, lvl in taught),
             "hours": hours,
             "is_certification": cert,
@@ -173,7 +177,7 @@ def _employees(rng, courses: list[dict]):
                             {"source": "manager", "level": levels[item["skill_id"]], "date": "2026-07-15"}
                         )
 
-            relevant = [c for c in courses if any(t["skill_id"] in levels for t in c["skills_taught"])]
+            relevant = [c for c in courses if any(s in levels for s in c["skills_taught"])]
             picks = rng.choice(len(relevant), size=min(len(relevant), int(rng.integers(1, 4))), replace=False)
             learning = []
             for k in picks:
@@ -246,7 +250,7 @@ def _market_signals(rng):
             rows.append({
                 "skill_id": sid,
                 "quarter": quarter,
-                "demand_fte": round(float(demand), 2),
+                "demand_fte": round(float(demand) * DEMAND_SCALE, 2),
                 "job_postings_index": round(float(index), 2),
             })
     return rows

@@ -82,7 +82,8 @@ def _factors(model, x: np.ndarray) -> list[dict]:
     grouped = {g: float(sum(contrib[f] for f in feats)) for g, feats in FACTOR_GROUPS.items()}
     total = sum(abs(v) for v in grouped.values()) or 1.0
     factors = [
-        {"name": g, "value": values[g], "weight": round(abs(v) / total, 3), "direction": "up" if v >= 0 else "down"}
+        {"name": g, "value": values[g], "contribution": round(v, 4), "weight": round(abs(v) / total, 3),
+         "direction": "up" if v >= 0 else "down"}
         for g, v in grouped.items()
     ]
     return sorted(factors, key=lambda f: f["weight"], reverse=True)
@@ -153,10 +154,8 @@ def train_and_store(db=None, save_model: bool = True) -> dict:
             "skill_name": name,
             "category": categories[skill_id],
             "history": [{"quarter": q, "demand_fte": round(float(v), 2)} for q, v in zip(s["quarters"], s["demand"])],
-            "forecast": [
-                {"quarter": q, "demand_fte": round(p, 2), "low": round(float(lo), 2), "high": round(float(hi), 2)}
-                for q, p, lo, hi in zip(future_q, fc["points"], fc["low"], fc["high"])
-            ],
+            "quarters": future_q,
+            "forecast": [round(float(p), 2) for p in fc["points"]],
             "low": [round(float(v), 2) for v in fc["low"]],
             "high": [round(float(v), 2) for v in fc["high"]],
             "growth_pct": round(growth * 100, 1),

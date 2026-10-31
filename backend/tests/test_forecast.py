@@ -50,8 +50,10 @@ def test_forecast_shape_and_band(seeded_db):
     assert len(forecasts) == 40
     for f in forecasts:
         assert len(f["forecast"]) == 4 and len(f["low"]) == 4 and len(f["high"]) == 4
-        for p in f["forecast"]:
-            assert p["low"] <= p["demand_fte"] <= p["high"]
+        assert len(f["quarters"]) == 4
+        for low, point, high in zip(f["low"], f["forecast"], f["high"]):
+            assert low <= point <= high
+        assert all("contribution" in fa for fa in f["factors"])
         exp = f["explanation"]
         assert exp["method"] == "Ridge forecast" and exp["source"] == "model"
         assert 0 <= exp["confidence"] <= 1

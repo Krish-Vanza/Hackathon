@@ -40,7 +40,7 @@ Tests need `mongomock` (`pip install mongomock`). Without it the database tests 
 | `skills` | 40 | `skill_id` S-001 to S-040, with `criticality` 0-1, `prerequisites`, `related`, `aliases` |
 | `roles` | 10 | R-01 to R-10, `required_skills` as `{skill_id, level}`, `next_roles` |
 | `employees` | 60 | E-0001 to E-0060, 5 departments, skills with evidence (`self`, `manager`, `project`, `certification`, each with `level` and `date`) |
-| `courses` | 30 | C-001 to C-030, `skills_taught` as `{skill_id, to_level}`, `hours`, `is_certification` |
+| `courses` | 30 | C-001 to C-030, `skills_taught` as plain skill IDs, `hours`, `is_certification` |
 | `open_roles` | 8 | OR-01 to OR-08 |
 | `market_signals` | 800 | 40 skills x 20 quarters, 2021-Q4 to 2026-Q3 |
 
@@ -53,7 +53,7 @@ slightly inflated on purpose, so evidence weighting matters. Evidence dates run 
 - `E-0007` is a Backend Engineer (R-01) with strong Statistics, Machine Learning, Pandas
   and Deep Learning evidence, so ML Engineer (R-05) is a strong fit. OR-01 is an open ML
   Engineer role.
-- Agentic AI (`S-028`) demand grows about 6 times over 20 quarters (14 to 88 FTE) and is the top
+- Agentic AI (`S-028`) demand grows about 6 times over 20 quarters (about 0.8 to 5.3 FTE) and is the top
   forecast riser.
 - Digital Services relies on one Agentic AI expert, `E-0023` (level 5). Nobody else in
   that department has manager, project or certification evidence above level 3.
@@ -82,11 +82,12 @@ Accuracy is measured on generated data and must be described that way in the dem
 ```json
 {
   "skill_id": "S-028", "skill_name": "Agentic AI", "category": "AI & ML",
-  "history":  [{"quarter": "2021-Q4", "demand_fte": 14.15}],
-  "forecast": [{"quarter": "2026-Q4", "demand_fte": 103.71, "low": 99.68, "high": 110.72}],
-  "low": [99.68], "high": [110.72],
+  "history":  [{"quarter": "2021-Q4", "demand_fte": 0.85}],
+  "quarters": ["2026-Q4"],
+  "forecast": [6.22],
+  "low": [5.98], "high": [6.63],
   "growth_pct": 92.7, "postings_growth_pct": 114.3, "trend_status": "emerging",
-  "factors": [{"name": "Job postings growth", "value": "+20.7% ...", "weight": 0.70, "direction": "up"}],
+  "factors": [{"name": "Job postings growth", "value": "+20.7% ...", "contribution": 0.041, "weight": 0.70, "direction": "up"}],
   "explanation": {"summary": "...", "factors": [], "confidence": 0.68, "method": "Ridge forecast", "source": "model"},
   "model_version": "ridge-20261031-063145"
 }

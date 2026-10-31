@@ -54,6 +54,8 @@ def _brief_facts(top_skills: list[dict]) -> list[dict]:
         item = {k: s.get(k) for k in keys if s.get(k) is not None}
         if "skill_name" not in item and "name" in s:
             item["skill_name"] = s["name"]
+        if "growth_pct" not in item and "growth" in s:
+            item["growth_pct"] = round(s["growth"] * 100, 1)
         facts.append(item)
     return facts
 
@@ -99,7 +101,9 @@ def market_brief(top_skills: list[dict] | None = None) -> dict:
 
 def _reason_template(facts: dict) -> str:
     if "course_id" in facts:
-        parts = [f"{facts.get('course_title', facts['course_id'])} builds {facts.get('skill_name', facts.get('skill_id', 'a needed skill'))}"]
+        title = facts.get("course_title") or facts.get("title") or facts["course_id"]
+        skill = facts.get("skill_name") or " and ".join(facts.get("closes_skills") or []) or facts.get("skill_id", "a needed skill")
+        parts = [f"{title} builds {skill}"]
         if facts.get("current_level") is not None and facts.get("target_level") is not None:
             parts.append(f"taking you from level {facts['current_level']} toward the level {facts['target_level']} your role needs")
         text = ", ".join(parts) + "."

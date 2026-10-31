@@ -10,4 +10,5 @@ joblib
 networkx
 google-genai
 pytest
+mongomock
 httpx

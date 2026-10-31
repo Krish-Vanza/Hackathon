@@ -6,6 +6,7 @@ the call fails, the wrapper returns template output, so the demo never crashes o
 import logging
 import re
 
+from app import config
 from app.fairness import assert_clean
 
 log = logging.getLogger(__name__)
@@ -21,6 +22,13 @@ def _call(module: str, function: str, *args):
     except Exception:
         log.exception("app.ai.%s.%s failed, using fallback", module, function)
         return None
+
+
+def _data_call(module: str, function: str, *args):
+    """Like _call, for app.ai code that reads the seed. Sample data uses other skill IDs."""
+    if not config.MONGODB_URI:
+        return None
+    return _call(module, function, *args)
 
 
 def _read(result, *fields):
@@ -43,14 +51,14 @@ def _text_and_source(result, fallback: str) -> tuple[str, str]:
 
 
 def graph(skills: list[dict], roles: list[dict], focus: str | None = None) -> dict:
-    result = _call("graph", "get_graph", focus)
+    result = _data_call("graph", "get_graph", focus)
     if result is not None:
         return result
     return _fallback_graph(skills, roles, focus)
 
 
 def centrality(skill_id: str, skills: list[dict], roles: list[dict]) -> float:
-    result = _call("graph", "centrality", skill_id)
+    result = _data_call("graph", "centrality", skill_id)
     if result is not None:
         return float(result)
     return float(_degrees(skills, roles).get(skill_id, 0))
@@ -98,7 +106,7 @@ def _fallback_graph(skills: list[dict], roles: list[dict], focus: str | None) ->
 
 
 def extract_skills(text: str, skills: list[dict]) -> tuple[list[dict], str]:
-    result = _call("extraction", "extract_skills", text)
+    result = _data_call("extraction", "extract_skills", text)
     if result is not None:
         rows = _read(result, "skills", "matches") if not isinstance(result, list) else result
         matches = [
