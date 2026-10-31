@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+pymongo
+dnspython
+pydantic
+python-dotenv
+numpy
+scikit-learn
+joblib
+networkx
+google-genai
+pytest
+httpx
