@@ -7,6 +7,7 @@ Every module reads and writes MongoDB through `get_db()`. Queries should pass
 import os
 from pathlib import Path
 
+import certifi
 from dotenv import load_dotenv
 from pymongo import ASCENDING, MongoClient
 
@@ -37,7 +38,9 @@ def get_client() -> MongoClient:
         uri = os.getenv("MONGODB_URI")
         if not uri:
             raise RuntimeError("MONGODB_URI is not set. Add it to backend/.env.")
-        _client = MongoClient(uri, serverSelectionTimeoutMS=8000, tz_aware=True)
+        # Python on macOS has no system CA bundle, so Atlas TLS needs certifi's.
+        tls = {"tlsCAFile": certifi.where()} if uri.startswith("mongodb+srv") else {}
+        _client = MongoClient(uri, serverSelectionTimeoutMS=8000, tz_aware=True, **tls)
     return _client
 
 

@@ -1,4 +1,6 @@
 """Personalized learning paths (FR-05)."""
+from concurrent.futures import ThreadPoolExecutor
+
 from app import ai_bridge
 from app.schemas import explain
 from app.services import context, mobility, reviews, scoring
@@ -85,7 +87,9 @@ def plan(employee_id: str, role_id: str | None, role: str) -> dict:
     ctx = context.load()
     target = _target_role(ctx, employee_id, role_id)
     gaps = gap_rows(ctx, employee_id, target)
-    results = [_with_reason(ctx, course) for course in _ordered_plan(ctx, employee_id, gaps)]
+    ordered = _ordered_plan(ctx, employee_id, gaps)
+    with ThreadPoolExecutor(max_workers=PLAN_SIZE) as pool:
+        results = list(pool.map(lambda course: _with_reason(ctx, course), ordered))
     courses = [course for course, _ in results]
     source = "gemini" if any(source == "gemini" for _, source in results) else "template"
     hours = sum(course["hours"] for course in courses)

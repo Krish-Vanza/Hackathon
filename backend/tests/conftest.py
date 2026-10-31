@@ -2,6 +2,7 @@ import os
 
 # Must run before app imports: tests stay on sample data, even with a real URI in .env.
 os.environ["MONGODB_URI"] = ""
+os.environ["LLM_MODE"] = "mock"
 
 import sys
 from pathlib import Path

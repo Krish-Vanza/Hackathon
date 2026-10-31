@@ -25,7 +25,7 @@ from app import db as dbm
 log = logging.getLogger(__name__)
 
 ID_PATTERN = re.compile(r"\b(?:S-\d{3}|R-\d{2}|E-\d{4}|C-\d{3}|OR-\d{2}|P-\d{3})\b")
-TIMEOUT_MS = 20_000
+TIMEOUT_MS = int(os.getenv("LLM_TIMEOUT_MS", "10000"))
 
 _client = None
 

@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
 pymongo
+certifi
 dnspython
 pydantic
 python-dotenv
