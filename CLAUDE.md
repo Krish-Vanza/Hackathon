@@ -1,82 +1,66 @@
-Team Git Workflow
+# Team Git Workflow
 
-This project is maintained by five developers using Claude Code and a shared GitHub repository.
+This project is maintained by five developers using Claude Code and a shared GitHub repository. Everyone works directly on the `main` branch.
 
-1. Branch Awareness
+## 1. Repository Awareness
+- At the beginning of every task, check:
+  - `git status`
+  - `git branch --show-current`
+  - `git remote -v`
+- Always work on `main`.
+- If another branch is active, ask before switching.
+- Never discard existing uncommitted changes.
 
-- At the beginning of every task, check "git status", "git branch --show-current", "git branch -vv" and "git remote -v".
-- Always detect and work on the currently active branch.
-- Never assume a branch name or hardcode a developer's branch.
-- Each developer works on their own feature branch.
-- Never work directly on "main". Ask the developer to switch to a feature branch if necessary.
+## 2. Automatic GitHub Sync
+After every meaningful completed development task:
 
-2. Automatic GitHub Sync
-
-After completing every meaningful development task:
-
-1. Review changes using "git status" and "git diff".
+1. Review changes using `git status` and `git diff`.
 2. Run relevant tests.
 3. Stage only relevant, safe files.
-4. Create a descriptive commit.
-5. Push to the current branch.
+4. Commit with a descriptive message.
+5. Push directly to `origin main`.
 6. Verify that the push succeeded.
 
-Use:
-
+```bash
 git add <relevant-files>
 git commit -m "feat: describe changes"
-git push
+git pull --rebase origin main
+git push origin main
+```
 
-If the branch has no upstream:
+If conflicts occur, stop and resolve them carefully. Never overwrite teammates' work.
 
-git push -u origin HEAD
-
-Do not claim changes are synced unless the push succeeds.
-
-3. Full Project Push
-
-If the developer explicitly requests a full project push or says "push everything":
-
+## 3. Full Project Push
+If explicitly asked to "push everything":
 - Review all tracked, modified, untracked and deleted files.
-- Check ".gitignore".
-- Exclude secrets, ".env" files, credentials, build artifacts and unnecessary files.
-- Stage all safe, intended project changes using "git add -A".
-- Review staged changes, commit and push to the current branch.
+- Check `.gitignore`.
+- Exclude secrets, `.env`, credentials and build artifacts.
+- Stage all intended safe changes using `git add -A`.
+- Review, commit and push to `origin main`.
 
-4. Team Collaboration
-
+## 4. Team Collaboration
+- All five developers share `main`.
+- Pull the latest changes before starting work and before pushing.
 - Never overwrite or discard another developer's work.
-- Avoid modifying files outside your assigned task.
-- Coordinate changes to shared files, APIs, database schemas and configurations.
-- Fetch remote updates before major synchronization.
+- Avoid editing files outside your assigned task.
+- Coordinate changes to shared files, APIs and database schemas.
 - Preserve uncommitted changes.
 - Resolve merge conflicts carefully; never blindly accept one side.
 - Never force push, reset hard or rewrite shared Git history.
 
-5. Main Branch & Pull Requests
+## 5. Git Safety
+- Never commit API keys, passwords, tokens or `.env` files.
+- Never force push.
+- Never use destructive Git commands without explicit authorization.
+- If a push fails, diagnose the issue and resolve it safely.
+- If another developer's changes conflict with yours, stop and report the issue rather than overwriting their work.
 
-- "main" is the stable integration branch.
-- Never push directly to "main".
-- Push completed features to their respective branches.
-- Create Pull Requests targeting "main".
-- Do not merge without the required review and checks.
-- Incorporate "origin/main" into feature branches when necessary, after checking for conflicts.
-
-6. Git Safety
-
-- Never commit API keys, passwords, tokens or ".env" files.
-- Never delete branches or overwrite remote history without explicit authorization.
-- Do not commit unrelated changes belonging to other developers.
-- If a push fails, diagnose and resolve safely. Never force it.
-
-7. Final Report
-
-After each task, briefly report:
-
+## 6. Final Report
+After each meaningful task, briefly report:
 - Changes implemented.
 - Tests performed and results.
-- Current branch.
+- Current branch (`main`).
 - Commit hash and message.
 - GitHub push status.
 
-Core principle: Automatically commit and push meaningful completed work to the currently active feature branch, while protecting teammates' changes and keeping "main" stable.
+**Core Principle:** Everyone works directly on `main`. Automatically commit and push meaningful completed work while protecting shared changes and maintaining repository stability.
