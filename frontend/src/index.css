@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+body {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.recharts-surface:focus,
+.recharts-wrapper:focus {
+  outline: none;
+}
